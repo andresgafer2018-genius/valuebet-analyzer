@@ -61,10 +61,10 @@ class DataFetcher:
         los parámetros att/def reales → el modelo se va a entrenar con datos
         estadísticamente coherentes.
         """
-        cache_file = DATA_DIR / f"historical_{n_matches}.parquet"
+        cache_file = DATA_DIR / f"historical_{n_matches}.csv"
         if cache_file.exists():
             print(f"[Cache] Cargando {n_matches} partidos históricos desde disco...")
-            return pd.read_parquet(cache_file)
+            return pd.read_csv(cache_file)
 
         print(f"[Generando] {n_matches} partidos históricos sintéticos...")
         rows = []
@@ -114,7 +114,7 @@ class DataFetcher:
             })
 
         df = pd.DataFrame(rows)
-        df.to_parquet(cache_file)
+        df.to_csv(cache_file)
         print(f"[OK] {len(df)} partidos generados y cacheados.")
         return df
 

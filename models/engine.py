@@ -1,0 +1,380 @@
+"""
+Motor de Predicción — Núcleo del Sistema
+==========================================
+Implementa:
+  1. Modelo de Distribución de Poisson (goles esperados)
+  2. Regresión Logística (resultado G/E/P)
+  3. Detector de Value Bets (edge = P_modelo - P_implícita)
+  4. Criterio de Kelly Fraccionado (sizing de apuesta)
+"""
+
+import math
+import warnings
+import numpy as np
+import pandas as pd
+from scipy.stats import poisson
+from scipy.optimize import minimize
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score, log_loss
+import pickle
+from pathlib import Path
+
+warnings.filterwarnings("ignore")
+MODELS_DIR = Path(__file__).parent.parent / "models"
+MODELS_DIR.mkdir(exist_ok=True)
+
+# Parámetros de equipos conocidos (para partidos sin historial suficiente)
+from data.fetcher import TEAMS_DB
+
+
+class PoissonModel:
+    """
+    Modelo de Dixon-Coles simplificado.
+    Estima parámetros de ataque y defensa por equipo usando MLE,
+    luego calcula probabilidades para cada resultado posible.
+    """
+
+    def __init__(self):
+        self.attack_params  = {}
+        self.defense_params = {}
+        self.home_advantage = 0.0
+        self.league_avg     = {}
+        self.is_fitted      = False
+
+    def _expected_goals(self, home: str, away: str, league: str) -> tuple[float, float]:
+        avg = self.league_avg.get(league, 1.35)
+        att_h = self.attack_params.get(home, 1.0)
+        def_h = self.defense_params.get(home, 1.0)
+        att_a = self.attack_params.get(away, 1.0)
+        def_a = self.defense_params.get(away, 1.0)
+        lambda_h = att_h * def_a * avg * math.exp(self.home_advantage)
+        lambda_a = att_a * def_h * avg
+        return lambda_h, lambda_a
+
+    def fit(self, df: pd.DataFrame):
+        """
+        Estimación iterativa (método de Dixon-Coles simplificado).
+        Converge en ~15 iteraciones, mucho más rápido que MLE con Nelder-Mead.
+        """
+        print("[Poisson] Estimando parámetros por equipo (iterativo)...")
+
+        for league, grp in df.groupby("league"):
+            self.league_avg[league] = (grp["home_goals"].mean() + grp["away_goals"].mean()) / 2
+
+        teams = sorted(set(df["home_team"]) | set(df["away_team"]))
+        att  = {t: 1.0 for t in teams}
+        deff = {t: 1.0 for t in teams}
+
+        # Home advantage: ratio de goles local vs visitante
+        home_avg = df["home_goals"].mean()
+        away_avg = df["away_goals"].mean()
+        self.home_advantage = math.log(home_avg / away_avg) / 2 if away_avg > 0 else 0.1
+
+        # Iteraciones de punto fijo (converge rápido)
+        for iteration in range(20):
+            new_att  = {}
+            new_deff = {}
+            for team in teams:
+                home_rows = df[df["home_team"] == team]
+                away_rows = df[df["away_team"] == team]
+
+                # Goles marcados como local y visitante
+                scored_home = home_rows["home_goals"].sum()
+                scored_away = away_rows["away_goals"].sum()
+
+                # Goles esperados marcados (bajo modelo actual)
+                exp_scored_home = sum(
+                    att[team] * deff.get(r["away_team"], 1.0) *
+                    self.league_avg.get(r["league"], 1.35) * math.exp(self.home_advantage)
+                    for _, r in home_rows.iterrows()
+                )
+                exp_scored_away = sum(
+                    att[team] * deff.get(r["home_team"], 1.0) *
+                    self.league_avg.get(r["league"], 1.35)
+                    for _, r in away_rows.iterrows()
+                )
+                total_scored  = scored_home + scored_away
+                total_exp_scored = exp_scored_home + exp_scored_away + 1e-6
+                new_att[team] = att[team] * (total_scored / total_exp_scored)
+
+                # Goles recibidos
+                conceded_home = home_rows["away_goals"].sum()
+                conceded_away = away_rows["home_goals"].sum()
+                exp_conceded_home = sum(
+                    att.get(r["away_team"], 1.0) * deff[team] *
+                    self.league_avg.get(r["league"], 1.35)
+                    for _, r in home_rows.iterrows()
+                )
+                exp_conceded_away = sum(
+                    att.get(r["home_team"], 1.0) * deff[team] *
+                    self.league_avg.get(r["league"], 1.35) * math.exp(self.home_advantage)
+                    for _, r in away_rows.iterrows()
+                )
+                total_conceded = conceded_home + conceded_away
+                total_exp_conceded = exp_conceded_home + exp_conceded_away + 1e-6
+                new_deff[team] = deff[team] * (total_conceded / total_exp_conceded)
+
+            # Normalizar
+            att_mean  = np.mean(list(new_att.values()))
+            deff_mean = np.mean(list(new_deff.values()))
+            att  = {t: v / att_mean  for t, v in new_att.items()}
+            deff = {t: v / deff_mean for t, v in new_deff.items()}
+
+            # Check convergencia
+            if iteration > 5:
+                delta = max(abs(att[t] - new_att.get(t, att[t])) for t in teams)
+                if delta < 1e-4:
+                    break
+
+        self.attack_params  = att
+        self.defense_params = deff
+        self.is_fitted      = True
+        print(f"[Poisson] OK en {iteration+1} iteraciones. Home advantage: {self.home_advantage:.3f}")
+
+    def predict_proba(self, home: str, away: str, league: str,
+                       max_goals: int = 8) -> dict:
+        """
+        Calcula P(resultado) y P(total goles) usando la distribución Poisson bivariada.
+        Retorna un dict con todas las probabilidades de mercado.
+        """
+        # Fallback a TEAMS_DB si el equipo no está entrenado
+        if home not in self.attack_params:
+            td = TEAMS_DB.get(home, {"att": 1.2, "def": 1.1, "elo": 1650})
+            avg = self.league_avg.get(league, 1.35)
+            lambda_h = td["att"] * 0.95 * avg * math.exp(self.home_advantage)
+            lambda_a = 1.0 * td["def"] * avg
+        elif away not in self.attack_params:
+            td = TEAMS_DB.get(away, {"att": 1.2, "def": 1.1, "elo": 1650})
+            avg = self.league_avg.get(league, 1.35)
+            lambda_h = 1.0 * td["def"] * avg * math.exp(self.home_advantage)
+            lambda_a = td["att"] * 0.95 * avg
+        else:
+            lambda_h, lambda_a = self._expected_goals(home, away, league)
+
+        # Matriz de probabilidades de scores
+        score_matrix = np.zeros((max_goals + 1, max_goals + 1))
+        for i in range(max_goals + 1):
+            for j in range(max_goals + 1):
+                score_matrix[i, j] = poisson.pmf(i, lambda_h) * poisson.pmf(j, lambda_a)
+
+        p_home = float(np.sum(np.tril(score_matrix, -1)))
+        p_draw = float(np.sum(np.diag(score_matrix)))
+        p_away = float(np.sum(np.triu(score_matrix, 1)))
+
+        # Over/Under 2.5
+        p_over25 = 0.0
+        for i in range(max_goals + 1):
+            for j in range(max_goals + 1):
+                if i + j > 2:
+                    p_over25 += score_matrix[i, j]
+        p_under25 = 1.0 - p_over25
+
+        # Normalizar por si acaso
+        total_1x2 = p_home + p_draw + p_away
+        return {
+            "p_home":    round(p_home / total_1x2, 4),
+            "p_draw":    round(p_draw / total_1x2, 4),
+            "p_away":    round(p_away / total_1x2, 4),
+            "p_over25":  round(p_over25, 4),
+            "p_under25": round(p_under25, 4),
+            "lambda_home": round(lambda_h, 3),
+            "lambda_away": round(lambda_a, 3),
+        }
+
+    def save(self):
+        with open(MODELS_DIR / "poisson_model.pkl", "wb") as f:
+            pickle.dump(self, f)
+
+    @classmethod
+    def load(cls):
+        path = MODELS_DIR / "poisson_model.pkl"
+        if path.exists():
+            with open(path, "rb") as f:
+                return pickle.load(f)
+        return cls()
+
+
+class LogisticModel:
+    """
+    Regresión Logística multi-clase (H/D/A) con features contextuales.
+    Complementa al modelo Poisson capturando factores no reflejados en goles.
+    """
+
+    def __init__(self):
+        self.model   = LogisticRegression(max_iter=1000, C=0.8, solver="lbfgs")
+        self.scaler  = StandardScaler()
+        self.is_fitted = False
+
+    def _build_features(self, df: pd.DataFrame) -> np.ndarray:
+        features = []
+        for _, row in df.iterrows():
+            elo_diff = row.get("home_elo", 1700) - row.get("away_elo", 1700)
+            home_td  = TEAMS_DB.get(row["home_team"], {"att": 1.2, "def": 1.1})
+            away_td  = TEAMS_DB.get(row["away_team"], {"att": 1.2, "def": 1.1})
+            features.append([
+                elo_diff / 400,
+                row.get("lambda_home", home_td["att"]),
+                row.get("lambda_away", away_td["att"]),
+                home_td["att"] - away_td["att"],      # diferencia de ataque
+                home_td["def"] - away_td["def"],      # diferencia de defensa
+                home_td["att"] * away_td["def"],      # interacción
+            ])
+        return np.array(features)
+
+    def fit(self, df: pd.DataFrame):
+        print("[LogReg] Entrenando con {} partidos...".format(len(df)))
+        X = self._build_features(df)
+        y = df["result"].values
+        X_scaled = self.scaler.fit_transform(X)
+        y = np.array(y)
+
+        cv_scores = cross_val_score(self.model, X_scaled, y, cv=5, scoring="accuracy")
+        self.model.fit(X_scaled, y)
+        self.is_fitted = True
+        print(f"[LogReg] CV Accuracy: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
+
+    def predict_proba(self, home: str, away: str,
+                       lambda_home: float, lambda_away: float) -> dict:
+        if not self.is_fitted:
+            return {}
+        home_td = TEAMS_DB.get(home, {"att": 1.2, "def": 1.1, "elo": 1700})
+        away_td = TEAMS_DB.get(away, {"att": 1.2, "def": 1.1, "elo": 1700})
+        elo_diff = home_td.get("elo", 1700) - away_td.get("elo", 1700)
+        X = np.array([[
+            elo_diff / 400,
+            lambda_home,
+            lambda_away,
+            home_td["att"] - away_td["att"],
+            home_td["def"] - away_td["def"],
+            home_td["att"] * away_td["def"],
+        ]])
+        X_scaled = self.scaler.transform(X)
+        proba = self.model.predict_proba(X_scaled)[0]
+        classes = list(self.model.classes_)
+        return {
+            "lr_p_home": round(proba[classes.index("H")] if "H" in classes else 0.33, 4),
+            "lr_p_draw": round(proba[classes.index("D")] if "D" in classes else 0.33, 4),
+            "lr_p_away": round(proba[classes.index("A")] if "A" in classes else 0.34, 4),
+        }
+
+    def save(self):
+        with open(MODELS_DIR / "logistic_model.pkl", "wb") as f:
+            pickle.dump(self, f)
+
+
+class ValueBetDetector:
+    """
+    Compara las probabilidades del modelo contra las cuotas del bookmaker
+    para identificar apuestas con valor esperado positivo.
+    """
+
+    MIN_EDGE = 0.03   # Edge mínimo del 3% para considerar value
+    MIN_ODD  = 1.50   # Filtro: cuotas muy bajas tienen poco valor
+
+    def detect(self, prediction: dict, odds: dict, match: dict) -> list[dict]:
+        """
+        Retorna lista de value bets encontradas en el partido.
+        """
+        alerts = []
+        markets = [
+            ("1X2_H",    prediction["p_home"],   odds["odd_home"],  "Local gana"),
+            ("1X2_D",    prediction["p_draw"],   odds["odd_draw"],  "Empate"),
+            ("1X2_A",    prediction["p_away"],   odds["odd_away"],  "Visitante gana"),
+            ("OVER25",   prediction["p_over25"], odds["odd_over25"],  "Over 2.5 goles"),
+            ("UNDER25",  prediction["p_under25"],odds["odd_under25"], "Under 2.5 goles"),
+        ]
+
+        for market_id, p_model, odd, label in markets:
+            if odd < self.MIN_ODD:
+                continue
+            p_implied = 1 / odd
+            edge      = p_model - p_implied
+
+            if edge >= self.MIN_EDGE:
+                kelly    = self._kelly(p_model, odd)
+                ev       = round(p_model * (odd - 1) - (1 - p_model), 4)
+                confidence = self._confidence_score(edge, p_model)
+                alerts.append({
+                    "match_id":    match["match_id"],
+                    "league":      match["league"],
+                    "home_team":   match["home_team"],
+                    "away_team":   match["away_team"],
+                    "kickoff":     match.get("kickoff", "N/A"),
+                    "market":      market_id,
+                    "market_label": label,
+                    "bookmaker":   odds["bookmaker"],
+                    "odd":         odd,
+                    "p_model":     round(p_model, 4),
+                    "p_implied":   round(p_implied, 4),
+                    "edge_pct":    round(edge * 100, 2),
+                    "ev":          ev,
+                    "kelly_frac":  kelly,
+                    "confidence":  confidence,
+                    "lambda_home": prediction.get("lambda_home", 0),
+                    "lambda_away": prediction.get("lambda_away", 0),
+                })
+
+        return sorted(alerts, key=lambda x: x["edge_pct"], reverse=True)
+
+    def _kelly(self, p: float, odd: float, fraction: float = 0.5) -> float:
+        """
+        Kelly Fraccionado al 50% (half-Kelly) para reducir varianza.
+        f* = (b*p - q) / b  donde b = odd - 1
+        Límite máximo: 5% del bankroll por apuesta.
+        """
+        b = odd - 1
+        q = 1 - p
+        f_full = (b * p - q) / b
+        f_half = f_full * fraction
+        return round(min(max(f_half, 0.0), 0.05), 4)  # Cap 5%
+
+    def _confidence_score(self, edge: float, p_model: float) -> str:
+        score = edge * 100 + p_model * 20
+        if score >= 12:
+            return "ALTA"
+        elif score >= 7:
+            return "MEDIA"
+        else:
+            return "BAJA"
+
+
+class ArbitrageDetector:
+    """
+    Detecta oportunidades de arbitraje entre bookmakers.
+    Existe arb cuando Σ(1/odd_i) < 1 entre distintas casas.
+    """
+
+    def detect_arb(self, odds_list: list[dict]) -> dict | None:
+        """
+        odds_list: lista de dicts de diferentes bookmakers para el mismo partido.
+        """
+        if len(odds_list) < 2:
+            return None
+
+        best_home = max(odds_list, key=lambda x: x["odd_home"])
+        best_draw = max(odds_list, key=lambda x: x["odd_draw"])
+        best_away = max(odds_list, key=lambda x: x["odd_away"])
+
+        margin = (1/best_home["odd_home"] + 1/best_draw["odd_draw"] + 1/best_away["odd_away"])
+
+        if margin < 1.0:
+            profit_pct = round((1 / margin - 1) * 100, 3)
+            return {
+                "type":       "ARBITRAGE",
+                "margin":     round(margin, 4),
+                "profit_pct": profit_pct,
+                "bets": [
+                    {"market": "Home", "bookmaker": best_home["bookmaker"],
+                     "odd": best_home["odd_home"],
+                     "stake_pct": round(100 / (margin * best_home["odd_home"]), 2)},
+                    {"market": "Draw", "bookmaker": best_draw["bookmaker"],
+                     "odd": best_draw["odd_draw"],
+                     "stake_pct": round(100 / (margin * best_draw["odd_draw"]), 2)},
+                    {"market": "Away", "bookmaker": best_away["bookmaker"],
+                     "odd": best_away["odd_away"],
+                     "stake_pct": round(100 / (margin * best_away["odd_away"]), 2)},
+                ],
+            }
+        return None

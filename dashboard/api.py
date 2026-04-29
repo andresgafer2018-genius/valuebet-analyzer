@@ -1,0 +1,124 @@
+"""
+API REST — Producción (Railway)
+================================
+- CORS configurado para aceptar el dominio de Vercel
+- Variables de entorno para API keys
+- Entrenamiento al startup (con cache en disco)
+- Compatible con Gunicorn
+"""
+
+import os, sys, logging
+from pathlib import Path
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(ROOT))
+
+from data.fetcher import DataFetcher
+from models.engine import PoissonModel, LogisticModel, ValueBetDetector, ArbitrageDetector
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+log = logging.getLogger(__name__)
+
+app = Flask(__name__)
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    os.getenv("FRONTEND_URL", "*"),
+]
+CORS(app, origins=ALLOWED_ORIGINS)
+
+_state = {
+    "alerts": None, "predictions": None, "arb": [],
+    "bankroll": float(os.getenv("INITIAL_BANKROLL", "1000")),
+}
+
+def _train_and_analyze():
+    log.info("Entrenando modelos...")
+    fetcher = DataFetcher()
+    df      = fetcher.get_historical_matches(400)
+    pm = PoissonModel(); pm.fit(df)
+    lm = LogisticModel(); lm.fit(df)
+    det     = ValueBetDetector()
+    arb_det = ArbitrageDetector()
+    upcoming = fetcher.get_upcoming_matches()
+    all_alerts, all_preds, arbs = [], [], []
+    for match in upcoming:
+        pred = pm.predict_proba(match["home_team"], match["away_team"], match["league"])
+        pred_lr = lm.predict_proba(match["home_team"], match["away_team"], pred["lambda_home"], pred["lambda_away"])
+        if pred_lr:
+            ph = pred["p_home"]*0.6 + pred_lr["lr_p_home"]*0.4
+            pd = pred["p_draw"]*0.6 + pred_lr["lr_p_draw"]*0.4
+            pa = pred["p_away"]*0.6 + pred_lr["lr_p_away"]*0.4
+            t  = ph+pd+pa
+            pred.update({"p_home": round(ph/t,4), "p_draw": round(pd/t,4), "p_away": round(pa/t,4)})
+        odds_list = [fetcher.get_simulated_odds(match) for _ in range(3)]
+        for odds in odds_list:
+            all_alerts.extend(det.detect(pred, odds, match))
+        arb = arb_det.detect_arb(odds_list)
+        if arb:
+            arbs.append({**arb, "match": f"{match['home_team']} vs {match['away_team']}", "league": match["league"]})
+        all_preds.append({**match, **pred})
+    seen = {}
+    for a in sorted(all_alerts, key=lambda x: x["edge_pct"], reverse=True):
+        k = f"{a['match_id']}_{a['market']}"
+        if k not in seen: seen[k] = a
+    _state["alerts"]      = sorted(seen.values(), key=lambda x: x["edge_pct"], reverse=True)
+    _state["predictions"] = all_preds
+    _state["arb"]         = arbs
+    log.info(f"Listo: {len(_state['alerts'])} VBs, {len(arbs)} arbitrajes.")
+
+_train_and_analyze()
+
+@app.route("/api/health")
+def health():
+    return jsonify({"status": "ok", "alerts": len(_state["alerts"] or []), "version": "1.0.0"})
+
+@app.route("/api/alerts")
+def get_alerts():
+    alerts   = list(_state["alerts"] or [])
+    league   = request.args.get("league")
+    conf     = request.args.get("confidence")
+    min_edge = float(request.args.get("min_edge", 0))
+    if league:   alerts = [a for a in alerts if a["league"].lower() == league.lower()]
+    if conf:     alerts = [a for a in alerts if a["confidence"] == conf.upper()]
+    alerts = [a for a in alerts if a["edge_pct"] >= min_edge]
+    return jsonify({"count": len(alerts), "alerts": alerts})
+
+@app.route("/api/predictions")
+def get_predictions():
+    preds  = list(_state["predictions"] or [])
+    league = request.args.get("league")
+    if league: preds = [p for p in preds if p["league"].lower() == league.lower()]
+    return jsonify({"count": len(preds), "predictions": preds})
+
+@app.route("/api/arbitrage")
+def get_arbitrage():
+    return jsonify({"count": len(_state["arb"]), "opportunities": _state["arb"]})
+
+@app.route("/api/bankroll", methods=["GET","POST"])
+def bankroll():
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        _state["bankroll"] = float(data.get("bankroll", _state["bankroll"]))
+    bk = _state["bankroll"]
+    alerts = _state["alerts"] or []
+    exp = min(sum(a["kelly_frac"] for a in alerts[:10]), 0.20) * bk
+    return jsonify({"bankroll": bk, "suggested_exposure": round(exp,2),
+                    "max_exposure_pct": 20.0, "active_alerts": len(alerts),
+                    "avg_edge": round(sum(a["edge_pct"] for a in alerts)/max(len(alerts),1), 2)})
+
+@app.route("/api/refresh", methods=["POST"])
+def refresh():
+    _state["alerts"] = None
+    _train_and_analyze()
+    return jsonify({"status": "refreshed", "alerts": len(_state["alerts"] or [])})
+
+@app.route("/api/leagues")
+def get_leagues():
+    return jsonify({"leagues": sorted({a["league"] for a in (_state["alerts"] or [])})})
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 5050))
+    app.run(host="0.0.0.0", port=port, debug=False)

@@ -1,5 +1,5 @@
-"""
-API REST — Producción (Railway)
+﻿"""
+API REST â€” ProducciÃ³n (Railway)
 ================================
 - CORS configurado para aceptar el dominio de Vercel
 - Variables de entorno para API keys
@@ -21,7 +21,9 @@ from models.engine import PoissonModel, LogisticModel, ValueBetDetector, Arbitra
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-app = Flask(__name__)
+import sys as _sys
+STATIC_DIR = str(Path(_sys.executable).parent / "static") if getattr(_sys, "frozen", False) else str(Path(__file__).parent.parent / "static")
+app = Flask(__name__, static_folder=STATIC_DIR, static_url_path="/")
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
@@ -119,6 +121,24 @@ def refresh():
 def get_leagues():
     return jsonify({"leagues": sorted({a["league"] for a in (_state["alerts"] or [])})})
 
+@app.route("/")
+def index():
+    return app.send_static_file("index.html")
+
+@app.route("/<path:path>")
+def static_files(path):
+    from flask import send_from_directory
+    static_dir = Path(_sys.executable).parent / "static" if getattr(_sys, "frozen", False) else Path(__file__).parent.parent / "static"
+    if (static_dir / path).exists():
+        return send_from_directory(str(static_dir), path)
+    return app.send_static_file("index.html")
+
 if __name__ == "__main__":
+    import threading, webbrowser
     port = int(os.getenv("PORT", 5050))
+    def open_browser():
+        import time
+        time.sleep(1.5)
+        webbrowser.open(f"http://localhost:{port}")
+    threading.Thread(target=open_browser, daemon=True).start()
     app.run(host="0.0.0.0", port=port, debug=False)

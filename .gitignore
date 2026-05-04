@@ -1,0 +1,8 @@
+__pycache__/
+frontend/node_modules/
+frontend/index.html/
+build/
+*.zip
+*.docx
+*.spec
+static/

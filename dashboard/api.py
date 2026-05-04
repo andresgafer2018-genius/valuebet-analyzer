@@ -194,3 +194,18 @@ def real_odds():
 @app.route("/api/real-odds/leagues", methods=["GET"])
 def real_odds_leagues():
     return jsonify({"leagues": list(SUPPORTED_LEAGUES.keys())})
+
+from notifications.telegram import send_value_bets, send_test as telegram_test
+
+@app.route("/api/telegram/test", methods=["POST"])
+def telegram_test_endpoint():
+    result = telegram_test()
+    return jsonify(result)
+
+@app.route("/api/telegram/send", methods=["POST"])
+def telegram_send():
+    data = request.get_json(silent=True) or {}
+    min_edge = float(data.get("min_edge", 10.0))
+    alerts = _state.get("alerts") or []
+    result = send_value_bets(alerts, min_edge=min_edge)
+    return jsonify(result)

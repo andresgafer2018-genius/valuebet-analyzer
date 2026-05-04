@@ -142,3 +142,17 @@ if __name__ == "__main__":
         webbrowser.open(f"http://localhost:{port}")
     threading.Thread(target=open_browser, daemon=True).start()
     app.run(host="0.0.0.0", port=port, debug=False)
+from analysis.backtesting import run_backtest
+
+@app.route("/api/backtest", methods=["GET"])
+def backtest():
+    league = request.args.get("league", "Premier League")
+    bankroll = float(request.args.get("bankroll", 1000))
+    min_edge = float(request.args.get("min_edge", 0.05))
+    result = run_backtest(league, initial_bankroll=bankroll, min_edge=min_edge)
+    return jsonify(result)
+
+@app.route("/api/backtest/leagues", methods=["GET"])
+def backtest_leagues():
+    from analysis.backtesting import LEAGUES
+    return jsonify({"leagues": list(LEAGUES.keys())})

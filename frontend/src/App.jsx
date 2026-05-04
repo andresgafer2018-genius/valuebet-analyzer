@@ -1,3 +1,4 @@
+import BacktestPanel from './BacktestPanel.jsx'
 // src/App.jsx
 import { useState, useEffect, useCallback } from "react"
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -381,7 +382,8 @@ export default function App() {
   const tabs = [
     { id:"alerts",   label:"Value Bets",   tooltip:"Apuestas con ventaja matemática detectadas hoy" },
     { id:"bankroll", label:"Bankroll",      tooltip:"Gestión de tu capital y curva de rendimiento" },
-    { id:"analysis", label:"Análisis",      tooltip:"Precisión del modelo y fuentes de datos" },
+    { id:"analysis",  label:"An�lisis",     tooltip:"Precisi�n del modelo y fuentes de datos" },
+  { id:"backtest", label:"Backtesting",  tooltip:"Simulaci�n hist�rica de tu estrategia" },
   ]
 
   return (
@@ -759,7 +761,8 @@ export default function App() {
         )}
 
         {/* ══════════ TAB: ANÁLISIS ══════════ */}
-        {tab === "analysis" && (
+        {tab === "backtest" && <BacktestPanel />}
+          {tab === "analysis" && (
           <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
             <Panel title="PRECISIÓN DEL MODELO POR TIPO DE APUESTA">
               <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)" }}>

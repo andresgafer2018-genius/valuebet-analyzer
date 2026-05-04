@@ -6,3 +6,5 @@ build/
 *.docx
 *.spec
 static/
+
+.env

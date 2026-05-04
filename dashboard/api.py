@@ -181,3 +181,16 @@ def basketball():
 @app.route("/api/basketball/leagues", methods=["GET"])
 def basketball_leagues():
     return jsonify({"leagues": list(BBALL_LEAGUES.keys())})
+
+from data.real_odds import get_real_alerts, SUPPORTED_LEAGUES
+
+@app.route("/api/real-odds", methods=["GET"])
+def real_odds():
+    league = request.args.get("league", "Liga Argentina")
+    min_edge = float(request.args.get("min_edge", 0.03))
+    result = get_real_alerts(league_name=league, min_edge=min_edge)
+    return jsonify(result)
+
+@app.route("/api/real-odds/leagues", methods=["GET"])
+def real_odds_leagues():
+    return jsonify({"leagues": list(SUPPORTED_LEAGUES.keys())})

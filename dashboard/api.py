@@ -156,3 +156,28 @@ def backtest():
 def backtest_leagues():
     from analysis.backtesting import LEAGUES
     return jsonify({"leagues": list(LEAGUES.keys())})
+
+from analysis.tennis import analyze_tennis, TOUR_URLS
+from analysis.basketball import analyze_basketball, LEAGUES as BBALL_LEAGUES
+
+@app.route("/api/tennis", methods=["GET"])
+def tennis():
+    tour = request.args.get("tour", "ATP 2024")
+    min_edge = float(request.args.get("min_edge", 0.05))
+    result = analyze_tennis(tour=tour, min_edge=min_edge)
+    return jsonify(result)
+
+@app.route("/api/tennis/tours", methods=["GET"])
+def tennis_tours():
+    return jsonify({"tours": list(TOUR_URLS.keys())})
+
+@app.route("/api/basketball", methods=["GET"])
+def basketball():
+    league = request.args.get("league", "NBA")
+    min_edge = float(request.args.get("min_edge", 0.05))
+    result = analyze_basketball(league=league, min_edge=min_edge)
+    return jsonify(result)
+
+@app.route("/api/basketball/leagues", methods=["GET"])
+def basketball_leagues():
+    return jsonify({"leagues": list(BBALL_LEAGUES.keys())})

@@ -123,3 +123,41 @@ class DataFetcher:
             "odd_under25": round(1.9 + np.random.uniform(-0.2, 0.2), 2),
             "bookmaker":   "simulated",
         }
+
+    def get_closing_odds(self, match, opening_odds: dict, prediction: dict) -> dict:
+        """
+        Simula las cuotas de cierre (closing line) de forma realista.
+        
+        El mercado se "afina" hacia el final: las cuotas de cierre reflejan
+        mejor la probabilidad real que las de apertura. Simulamos esto
+        ajustando las cuotas de apertura hacia la probabilidad del modelo
+        con un pequeño ruido residual.
+        
+        CLV positivo = apostaste antes de que el mercado se moviera a tu favor.
+        """
+        # Seed distinto al de apertura para simular movimiento de mercado
+        np.random.seed((hash(str(match)) + 1) % 2**32)
+
+        def _close(odd_open: float, p_model: float) -> float:
+            """
+            Cuota de cierre = promedio ponderado entre cuota apertura
+            y cuota "justa" del modelo, con ruido pequeño.
+            - 40% peso al modelo (mercado se mueve hacia la prob real)
+            - 60% peso a la cuota apertura (inercia del mercado)
+            - ±2% ruido residual
+            """
+            fair_odd = round(1 / p_model, 2) if p_model > 0 else odd_open
+            # Margin bookmaker ~5% sobre la cuota justa
+            fair_odd_with_margin = fair_odd * 0.95
+            closing = 0.6 * odd_open + 0.4 * fair_odd_with_margin
+            noise = np.random.uniform(-0.02, 0.02) * closing
+            return round(max(closing + noise, 1.01), 2)
+
+        return {
+            "odd_home":    _close(opening_odds["odd_home"],    prediction.get("p_home",   0.35)),
+            "odd_draw":    _close(opening_odds["odd_draw"],    prediction.get("p_draw",   0.28)),
+            "odd_away":    _close(opening_odds["odd_away"],    prediction.get("p_away",   0.37)),
+            "odd_over25":  _close(opening_odds["odd_over25"],  prediction.get("p_over25", 0.52)),
+            "odd_under25": _close(opening_odds["odd_under25"], prediction.get("p_under25",0.48)),
+            "bookmaker":   "closing",
+        }

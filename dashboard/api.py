@@ -74,8 +74,9 @@ def _train_and_analyze():
         pred = cal.calibrate(pred)
 
         odds_list = [fetcher.get_simulated_odds(match) for _ in range(3)]
+        closing_odds = fetcher.get_closing_odds(match, odds_list[0], pred)
         for odds in odds_list:
-            all_alerts.extend(det.detect(pred, odds, match))
+            all_alerts.extend(det.detect(pred, odds, match, closing_odds))
         arb = arb_det.detect_arb(odds_list)
         if arb:
             arbs.append({**arb, "match": f"{match['home_team']} vs {match['away_team']}", "league": match["league"]})

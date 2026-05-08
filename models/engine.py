@@ -397,17 +397,18 @@ class ValueBetDetector:
     MIN_EDGE = 0.03
     MIN_ODD  = 1.50
 
-    def detect(self, prediction: dict, odds: dict, match: dict) -> list[dict]:
+    def detect(self, prediction: dict, odds: dict, match: dict,
+               closing_odds: dict = None) -> list[dict]:
         alerts = []
         markets = [
-            ("1X2_H",    prediction["p_home"],   odds["odd_home"],    "Local gana"),
-            ("1X2_D",    prediction["p_draw"],   odds["odd_draw"],    "Empate"),
-            ("1X2_A",    prediction["p_away"],   odds["odd_away"],    "Visitante gana"),
-            ("OVER25",   prediction["p_over25"], odds["odd_over25"],  "Over 2.5 goles"),
-            ("UNDER25",  prediction["p_under25"],odds["odd_under25"], "Under 2.5 goles"),
+            ("1X2_H",    prediction["p_home"],   odds["odd_home"],    "Local gana",       "odd_home"),
+            ("1X2_D",    prediction["p_draw"],   odds["odd_draw"],    "Empate",           "odd_draw"),
+            ("1X2_A",    prediction["p_away"],   odds["odd_away"],    "Visitante gana",   "odd_away"),
+            ("OVER25",   prediction["p_over25"], odds["odd_over25"],  "Over 2.5 goles",   "odd_over25"),
+            ("UNDER25",  prediction["p_under25"],odds["odd_under25"], "Under 2.5 goles",  "odd_under25"),
         ]
 
-        for market_id, p_model, odd, label in markets:
+        for market_id, p_model, odd, label, odd_key in markets:
             if odd < self.MIN_ODD:
                 continue
             p_implied = 1 / odd
@@ -417,6 +418,15 @@ class ValueBetDetector:
                 kelly      = self._kelly(p_model, odd)
                 ev         = round(p_model * (odd - 1) - (1 - p_model), 4)
                 confidence = self._confidence_score(edge, p_model)
+
+                # Closing Line Value
+                clv_pct = None
+                odd_closing = None
+                if closing_odds and odd_key in closing_odds:
+                    odd_closing = closing_odds[odd_key]
+                    if odd_closing and odd_closing > 1.0:
+                        clv_pct = round((odd / odd_closing - 1) * 100, 2)
+
                 alerts.append({
                     "match_id":     match["match_id"],
                     "league":       match["league"],
@@ -427,6 +437,8 @@ class ValueBetDetector:
                     "market_label": label,
                     "bookmaker":    odds["bookmaker"],
                     "odd":          odd,
+                    "odd_closing":  odd_closing,
+                    "clv_pct":      clv_pct,
                     "p_model":      round(p_model, 4),
                     "p_implied":    round(p_implied, 4),
                     "edge_pct":     round(edge * 100, 2),

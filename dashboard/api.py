@@ -1,5 +1,5 @@
-﻿"""
-API REST â€” ProducciÃ³n (Railway)
+"""
+API REST – Producción (Railway)
 ================================
 - CORS configurado para aceptar el dominio de Vercel
 - Variables de entorno para API keys
@@ -16,7 +16,7 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
 from data.fetcher import DataFetcher
-from models.engine import PoissonModel, LogisticModel, ValueBetDetector, ArbitrageDetector
+from models.engine import PoissonModel, LogisticModel, ValueBetDetector, ArbitrageDetector, ProbabilityCalibrator
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -42,12 +42,26 @@ def _train_and_analyze():
     df      = fetcher.get_historical_matches(400)
     pm = PoissonModel(); pm.fit(df)
     lm = LogisticModel(); lm.fit(df)
+
+    # Calibración de probabilidades (Platt Scaling)
+    cal = ProbabilityCalibrator()
+    proba_list = []
+    results    = []
+    for _, row in df.iterrows():
+        if "result" in row and row["result"] in ("H", "D", "A"):
+            p = pm.predict_proba(row["home_team"], row["away_team"], row["league"])
+            proba_list.append(p)
+            results.append(row["result"])
+    cal.fit(proba_list, results)
+
     det     = ValueBetDetector()
     arb_det = ArbitrageDetector()
     upcoming = fetcher.get_upcoming_matches()
     all_alerts, all_preds, arbs = [], [], []
     for match in upcoming:
         pred = pm.predict_proba(match["home_team"], match["away_team"], match["league"])
+
+        # Mezcla Poisson + LogReg (60/40)
         pred_lr = lm.predict_proba(match["home_team"], match["away_team"], pred["lambda_home"], pred["lambda_away"])
         if pred_lr:
             ph = pred["p_home"]*0.6 + pred_lr["lr_p_home"]*0.4
@@ -55,6 +69,10 @@ def _train_and_analyze():
             pa = pred["p_away"]*0.6 + pred_lr["lr_p_away"]*0.4
             t  = ph+pd+pa
             pred.update({"p_home": round(ph/t,4), "p_draw": round(pd/t,4), "p_away": round(pa/t,4)})
+
+        # Calibración final
+        pred = cal.calibrate(pred)
+
         odds_list = [fetcher.get_simulated_odds(match) for _ in range(3)]
         for odds in odds_list:
             all_alerts.extend(det.detect(pred, odds, match))
@@ -75,7 +93,7 @@ _train_and_analyze()
 
 @app.route("/api/health")
 def health():
-    return jsonify({"status": "ok", "alerts": len(_state["alerts"] or []), "version": "1.0.0"})
+    return jsonify({"status": "ok", "alerts": len(_state["alerts"] or []), "version": "1.1.0"})
 
 @app.route("/api/alerts")
 def get_alerts():
@@ -142,6 +160,7 @@ if __name__ == "__main__":
         webbrowser.open(f"http://localhost:{port}")
     threading.Thread(target=open_browser, daemon=True).start()
     app.run(host="0.0.0.0", port=port, debug=False)
+
 from analysis.backtesting import run_backtest
 
 @app.route("/api/backtest", methods=["GET"])

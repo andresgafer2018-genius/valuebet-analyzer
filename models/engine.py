@@ -1,8 +1,8 @@
 """
-Motor de Predicción — Núcleo del Sistema
+Motor de Predicción – Núcleo del Sistema
 ==========================================
 Implementa:
-  1. Modelo de Distribución de Poisson (goles esperados)
+  1. Modelo de Distribución de Poisson con corrección Dixon-Coles
   2. Regresión Logística (resultado G/E/P)
   3. Detector de Value Bets (edge = P_modelo - P_implícita)
   4. Criterio de Kelly Fraccionado (sizing de apuesta)
@@ -29,11 +29,34 @@ MODELS_DIR.mkdir(exist_ok=True)
 from data.fetcher import TEAMS_DB
 
 
+def dixon_coles_tau(x: int, y: int, lambda_h: float, lambda_a: float, rho: float) -> float:
+    """
+    Factor de corrección Dixon-Coles (τ) para resultados de pocos goles.
+    Corrige la independencia entre goles locales y visitantes para:
+      0-0, 1-0, 0-1, 1-1
+    Para el resto de resultados τ = 1 (sin corrección).
+
+    rho < 0 → correlación negativa (resultados bajos más frecuentes de lo que Poisson predice)
+    rho típico: entre -0.1 y -0.2
+    """
+    if x == 0 and y == 0:
+        return 1 - lambda_h * lambda_a * rho
+    elif x == 1 and y == 0:
+        return 1 + lambda_a * rho
+    elif x == 0 and y == 1:
+        return 1 + lambda_h * rho
+    elif x == 1 and y == 1:
+        return 1 - rho
+    else:
+        return 1.0
+
+
 class PoissonModel:
     """
-    Modelo de Dixon-Coles simplificado.
-    Estima parámetros de ataque y defensa por equipo usando MLE,
-    luego calcula probabilidades para cada resultado posible.
+    Modelo de Dixon-Coles completo.
+    Estima parámetros de ataque y defensa por equipo usando MLE iterativo,
+    y aplica la corrección Dixon-Coles (factor τ con parámetro ρ) para
+    corregir la sobreestimación de resultados bajos (0-0, 1-0, 0-1, 1-1).
     """
 
     def __init__(self):
@@ -41,6 +64,7 @@ class PoissonModel:
         self.defense_params = {}
         self.home_advantage = 0.0
         self.league_avg     = {}
+        self.rho            = -0.13   # Valor típico Dixon-Coles (estimado en el fit)
         self.is_fitted      = False
 
     def _expected_goals(self, home: str, away: str, league: str) -> tuple[float, float]:
@@ -53,10 +77,46 @@ class PoissonModel:
         lambda_a = att_a * def_h * avg
         return lambda_h, lambda_a
 
+    def _estimate_rho(self, df: pd.DataFrame) -> float:
+        """
+        Estima el parámetro ρ (rho) de Dixon-Coles maximizando la log-verosimilitud
+        de los 4 resultados bajos con los lambdas ya estimados.
+        Usa optimización simple sobre un rango [-0.3, 0.0].
+        """
+        if not self.is_fitted or len(df) < 50:
+            return -0.13  # Valor por defecto si no hay suficientes datos
+
+        def neg_log_likelihood(rho_val):
+            rho_val = rho_val[0]
+            ll = 0.0
+            for _, row in df.iterrows():
+                h_goals = int(row["home_goals"])
+                a_goals = int(row["away_goals"])
+                if h_goals > 1 or a_goals > 1:
+                    continue  # Solo nos importan los resultados bajos para estimar rho
+                try:
+                    lh, la = self._expected_goals(row["home_team"], row["away_team"], row["league"])
+                    tau = dixon_coles_tau(h_goals, a_goals, lh, la, rho_val)
+                    if tau <= 0:
+                        return 1e10
+                    p = poisson.pmf(h_goals, lh) * poisson.pmf(a_goals, la) * tau
+                    if p > 0:
+                        ll += math.log(p)
+                except Exception:
+                    continue
+            return -ll
+
+        result = minimize(neg_log_likelihood, x0=[-0.13],
+                         bounds=[(-0.4, 0.0)], method="L-BFGS-B")
+        rho_estimated = float(result.x[0])
+        print(f"[Dixon-Coles] ρ estimado: {rho_estimated:.4f}")
+        return rho_estimated
+
     def fit(self, df: pd.DataFrame):
         """
-        Estimación iterativa (método de Dixon-Coles simplificado).
-        Converge en ~15 iteraciones, mucho más rápido que MLE con Nelder-Mead.
+        Estimación iterativa (método de Dixon-Coles).
+        1. Estima parámetros att/def/home_advantage iterativamente.
+        2. Estima ρ (rho) optimizando la log-verosimilitud de resultados bajos.
         """
         print("[Poisson] Estimando parámetros por equipo (iterativo)...")
 
@@ -95,9 +155,9 @@ class PoissonModel:
                     self.league_avg.get(r["league"], 1.35)
                     for _, r in away_rows.iterrows()
                 )
-                total_scored  = scored_home + scored_away
+                total_scored     = scored_home + scored_away
                 total_exp_scored = exp_scored_home + exp_scored_away + 1e-6
-                new_att[team] = att[team] * (total_scored / total_exp_scored)
+                new_att[team]    = att[team] * (total_scored / total_exp_scored)
 
                 # Goles recibidos
                 conceded_home = home_rows["away_goals"].sum()
@@ -112,9 +172,9 @@ class PoissonModel:
                     self.league_avg.get(r["league"], 1.35) * math.exp(self.home_advantage)
                     for _, r in away_rows.iterrows()
                 )
-                total_conceded = conceded_home + conceded_away
+                total_conceded     = conceded_home + conceded_away
                 total_exp_conceded = exp_conceded_home + exp_conceded_away + 1e-6
-                new_deff[team] = deff[team] * (total_conceded / total_exp_conceded)
+                new_deff[team]     = deff[team] * (total_conceded / total_exp_conceded)
 
             # Normalizar
             att_mean  = np.mean(list(new_att.values()))
@@ -133,31 +193,40 @@ class PoissonModel:
         self.is_fitted      = True
         print(f"[Poisson] OK en {iteration+1} iteraciones. Home advantage: {self.home_advantage:.3f}")
 
+        # Estimar rho (Dixon-Coles)
+        self.rho = self._estimate_rho(df)
+
     def predict_proba(self, home: str, away: str, league: str,
                        max_goals: int = 8) -> dict:
         """
-        Calcula P(resultado) y P(total goles) usando la distribución Poisson bivariada.
-        Retorna un dict con todas las probabilidades de mercado.
+        Calcula P(resultado) y P(total goles) usando la distribución Poisson bivariada
+        con corrección Dixon-Coles (factor τ) para resultados de pocos goles.
         """
         # Fallback a TEAMS_DB si el equipo no está entrenado
         if home not in self.attack_params:
-            td = TEAMS_DB.get(home, {"att": 1.2, "def": 1.1, "elo": 1650})
+            td  = TEAMS_DB.get(home, {"att": 1.2, "def": 1.1, "elo": 1650})
             avg = self.league_avg.get(league, 1.35)
             lambda_h = td["att"] * 0.95 * avg * math.exp(self.home_advantage)
             lambda_a = 1.0 * td["def"] * avg
         elif away not in self.attack_params:
-            td = TEAMS_DB.get(away, {"att": 1.2, "def": 1.1, "elo": 1650})
+            td  = TEAMS_DB.get(away, {"att": 1.2, "def": 1.1, "elo": 1650})
             avg = self.league_avg.get(league, 1.35)
             lambda_h = 1.0 * td["def"] * avg * math.exp(self.home_advantage)
             lambda_a = td["att"] * 0.95 * avg
         else:
             lambda_h, lambda_a = self._expected_goals(home, away, league)
 
-        # Matriz de probabilidades de scores
+        # Matriz de probabilidades de scores CON corrección Dixon-Coles
         score_matrix = np.zeros((max_goals + 1, max_goals + 1))
         for i in range(max_goals + 1):
             for j in range(max_goals + 1):
-                score_matrix[i, j] = poisson.pmf(i, lambda_h) * poisson.pmf(j, lambda_a)
+                tau = dixon_coles_tau(i, j, lambda_h, lambda_a, self.rho)
+                score_matrix[i, j] = poisson.pmf(i, lambda_h) * poisson.pmf(j, lambda_a) * tau
+
+        # Normalizar la matriz (la corrección tau puede alterar levemente la suma)
+        total = score_matrix.sum()
+        if total > 0:
+            score_matrix /= total
 
         p_home = float(np.sum(np.tril(score_matrix, -1)))
         p_draw = float(np.sum(np.diag(score_matrix)))
@@ -171,7 +240,7 @@ class PoissonModel:
                     p_over25 += score_matrix[i, j]
         p_under25 = 1.0 - p_over25
 
-        # Normalizar por si acaso
+        # Normalizar 1X2 por si acaso
         total_1x2 = p_home + p_draw + p_away
         return {
             "p_home":    round(p_home / total_1x2, 4),
@@ -181,6 +250,7 @@ class PoissonModel:
             "p_under25": round(p_under25, 4),
             "lambda_home": round(lambda_h, 3),
             "lambda_away": round(lambda_a, 3),
+            "rho":         round(self.rho, 4),
         }
 
     def save(self):
@@ -279,9 +349,9 @@ class ValueBetDetector:
         """
         alerts = []
         markets = [
-            ("1X2_H",    prediction["p_home"],   odds["odd_home"],  "Local gana"),
-            ("1X2_D",    prediction["p_draw"],   odds["odd_draw"],  "Empate"),
-            ("1X2_A",    prediction["p_away"],   odds["odd_away"],  "Visitante gana"),
+            ("1X2_H",    prediction["p_home"],   odds["odd_home"],    "Local gana"),
+            ("1X2_D",    prediction["p_draw"],   odds["odd_draw"],    "Empate"),
+            ("1X2_A",    prediction["p_away"],   odds["odd_away"],    "Visitante gana"),
             ("OVER25",   prediction["p_over25"], odds["odd_over25"],  "Over 2.5 goles"),
             ("UNDER25",  prediction["p_under25"],odds["odd_under25"], "Under 2.5 goles"),
         ]
@@ -293,8 +363,8 @@ class ValueBetDetector:
             edge      = p_model - p_implied
 
             if edge >= self.MIN_EDGE:
-                kelly    = self._kelly(p_model, odd)
-                ev       = round(p_model * (odd - 1) - (1 - p_model), 4)
+                kelly      = self._kelly(p_model, odd)
+                ev         = round(p_model * (odd - 1) - (1 - p_model), 4)
                 confidence = self._confidence_score(edge, p_model)
                 alerts.append({
                     "match_id":    match["match_id"],
@@ -314,6 +384,7 @@ class ValueBetDetector:
                     "confidence":  confidence,
                     "lambda_home": prediction.get("lambda_home", 0),
                     "lambda_away": prediction.get("lambda_away", 0),
+                    "rho":         prediction.get("rho", -0.13),
                 })
 
         return sorted(alerts, key=lambda x: x["edge_pct"], reverse=True)

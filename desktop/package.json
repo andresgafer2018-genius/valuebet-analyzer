@@ -1,0 +1,72 @@
+{
+  "name": "valuebet-analyzer",
+  "version": "1.0.0",
+  "description": "ValueBet Analyzer - Sistema de análisis de apuestas deportivas con IA",
+  "main": "main.js",
+  "author": "andresgafer2018",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64",
+    "build:mac": "electron-builder --mac",
+    "build:all": "electron-builder --win --mac --x64"
+  },
+  "dependencies": {
+    "electron-updater": "^6.1.7"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.valuebet.analyzer",
+    "productName": "ValueBet Analyzer",
+    "copyright": "Copyright © 2026",
+    "icon": "assets/icon",
+    "files": [
+      "main.js",
+      "preload.js",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ValueBet Analyzer",
+      "installerHeaderIcon": "assets/icon.ico",
+      "deleteAppDataOnUninstall": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.finance"
+    },
+    "dmg": {
+      "title": "ValueBet Analyzer",
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "andresgafer2018-genius",
+      "repo": "valuebet-analyzer"
+    }
+  }
+}

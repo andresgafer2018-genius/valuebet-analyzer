@@ -162,7 +162,7 @@ if __name__ == "__main__":
     threading.Thread(target=open_browser, daemon=True).start()
     app.run(host="0.0.0.0", port=port, debug=False)
 
-from analysis.backtesting import run_backtest
+from analysis.backtesting import run_backtest, walk_forward_validation
 
 @app.route("/api/backtest", methods=["GET"])
 def backtest():
@@ -228,4 +228,20 @@ def telegram_send():
     min_edge = float(data.get("min_edge", 10.0))
     alerts = _state.get("alerts") or []
     result = send_value_bets(alerts, min_edge=min_edge)
+    return jsonify(result)
+
+@app.route("/api/backtest/walk-forward", methods=["GET"])
+def backtest_walk_forward():
+    league_name     = request.args.get("league", "Premier League")
+    window_months   = int(request.args.get("window_months", 3))
+    step_months     = int(request.args.get("step_months", 1))
+    min_edge        = float(request.args.get("min_edge", 0.05))
+    initial_bankroll = float(request.args.get("bankroll", 1000.0))
+    result = walk_forward_validation(
+        league_name=league_name,
+        window_months=window_months,
+        step_months=step_months,
+        min_edge=min_edge,
+        initial_bankroll=initial_bankroll,
+    )
     return jsonify(result)

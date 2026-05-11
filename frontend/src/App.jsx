@@ -1,4 +1,5 @@
 import BacktestPanel from './BacktestPanel.jsx'
+import WalkForwardPanel from './WalkForwardPanel.jsx'
 import SportsPanel from './SportsPanel.jsx'
 // src/App.jsx
 import { useState, useEffect, useCallback } from "react"
@@ -385,6 +386,7 @@ export default function App() {
   { id:"bankroll", label:"Bankroll",         tooltip:"Gestion de tu capital y curva de rendimiento" },
   { id:"analysis", label:"Analisis",         tooltip:"Precision del modelo y fuentes de datos" },
   { id:"sports",   label:"Tenis & Basquet",  tooltip:"Analisis de tenis y basquet" },
+  { id:"walkforward", label:"Walk-Forward" },
   { id:"backtest", label:"Backtesting",      tooltip:"Simulacion historica de tu estrategia" },
 ]
 
@@ -764,7 +766,7 @@ export default function App() {
 
         {/* ══════════ TAB: ANÁLISIS ══════════ */}
         {tab === "sports" && <SportsPanel />}
-          {tab === "backtest" && <BacktestPanel />}
+          {tab === "walkforward" && <WalkForwardPanel />}{tab === "backtest" && <BacktestPanel />}
           {tab === "analysis" && (
           <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
             <Panel title="PRECISIÓN DEL MODELO POR TIPO DE APUESTA">

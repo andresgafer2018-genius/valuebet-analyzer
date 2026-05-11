@@ -156,7 +156,7 @@ def walk_forward_validation(league_name: str, window_months: int = 3,
 
     Retorna dict con métricas agregadas + detalle por ventana.
     """
-    url = LEAGUE_URLS.get(league_name)
+    url = LEAGUES.get(league_name)
     if not url:
         return {"error": f"Liga no encontrada: {league_name}"}
 

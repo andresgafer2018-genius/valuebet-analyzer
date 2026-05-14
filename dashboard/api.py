@@ -173,7 +173,7 @@ def trigger_retrain():
     status = get_retrain_status()
     if status["is_running"]:
         return jsonify({"message": "Ya en curso", "status": status}), 409
-    run_retrain_async(poisson, logistic, calibrator, fetcher)
+    run_retrain_async(pm, lm, cal, fetcher)
     return jsonify({"message": "Iniciado", "status": status})
 
 @app.route("/api/retrain/status", methods=["GET"])

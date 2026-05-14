@@ -1,4 +1,4 @@
-"""
+﻿"""
 API REST – Producción (Railway)
 ================================
 - CORS configurado para aceptar el dominio de Vercel
@@ -17,6 +17,8 @@ sys.path.insert(0, str(ROOT))
 
 from data.fetcher import DataFetcher
 from models.engine import PoissonModel, LogisticModel, ValueBetDetector, ArbitrageDetector, ProbabilityCalibrator
+from database.db import init_db
+from database.models import get_bankroll, update_bankroll, save_alerts, get_alerts_history, get_bets, get_bet_stats, save_bet, resolve_bet
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -31,9 +33,18 @@ ALLOWED_ORIGINS = [
 ]
 CORS(app, origins=ALLOWED_ORIGINS)
 
+# Inicializar PostgreSQL
+_db_available = False
+try:
+    init_db()
+    _db_available = True
+    log.info('PostgreSQL conectado correctamente')
+except Exception as _e:
+    log.warning(f'Sin PostgreSQL, usando memoria: {_e}')
+
 _state = {
     "alerts": None, "predictions": None, "arb": [],
-    "bankroll": float(os.getenv("INITIAL_BANKROLL", "1000")),
+    "bankroll": get_bankroll() if _db_available else float(os.getenv("INITIAL_BANKROLL", "1000")),
 }
 
 def _train_and_analyze():
@@ -245,3 +256,73 @@ def backtest_walk_forward():
         initial_bankroll=initial_bankroll,
     )
     return jsonify(result)
+
+
+# ENDPOINTS DE BASE DE DATOS
+
+@app.route('/api/bets', methods=['GET'])
+def list_bets():
+    if not _db_available:
+        return jsonify({'error': 'DB no disponible'}), 503
+    result_filter = request.args.get('result')
+    limit = int(request.args.get('limit', 50))
+    bets = get_bets(limit=limit, result_filter=result_filter)
+    for b in bets:
+        for k, v in b.items():
+            if hasattr(v, 'isoformat'):
+                b[k] = v.isoformat()
+    return jsonify({'bets': bets})
+
+@app.route('/api/bets', methods=['POST'])
+def create_bet():
+    if not _db_available:
+        return jsonify({'error': 'DB no disponible'}), 503
+    data = request.get_json(silent=True) or {}
+    bet_id = save_bet(
+        home_team=data.get('home_team', ''),
+        away_team=data.get('away_team', ''),
+        league=data.get('league', ''),
+        bet_type=data.get('bet_type', 'home'),
+        odds=float(data.get('odds', 0)),
+        edge=float(data.get('edge', 0)),
+        kelly_stake=float(data.get('kelly_stake', 0)),
+        amount_bet=float(data.get('amount_bet', 0)),
+        match_date=data.get('match_date'),
+    )
+    return jsonify({'bet_id': bet_id, 'status': 'saved'})
+
+@app.route('/api/bets/<int:bet_id>/resolve', methods=['POST'])
+def resolve_bet_endpoint(bet_id):
+    if not _db_available:
+        return jsonify({'error': 'DB no disponible'}), 503
+    data = request.get_json(silent=True) or {}
+    result = data.get('result')
+    if result not in ('win', 'loss'):
+        return jsonify({'error': 'result debe ser win o loss'}), 400
+    profit = resolve_bet(bet_id, result)
+    new_bankroll = get_bankroll()
+    _state['bankroll'] = new_bankroll
+    return jsonify({'profit': profit, 'new_bankroll': new_bankroll})
+
+@app.route('/api/stats', methods=['GET'])
+def bet_stats():
+    if not _db_available:
+        return jsonify({'error': 'DB no disponible'}), 503
+    stats = get_bet_stats()
+    bankroll = get_bankroll()
+    for k, v in stats.items():
+        if hasattr(v, '__float__'):
+            stats[k] = float(v)
+    return jsonify({**stats, 'current_bankroll': bankroll})
+
+@app.route('/api/alerts/history', methods=['GET'])
+def alerts_history():
+    if not _db_available:
+        return jsonify({'error': 'DB no disponible'}), 503
+    limit = int(request.args.get('limit', 100))
+    history = get_alerts_history(limit=limit)
+    for h in history:
+        for k, v in h.items():
+            if hasattr(v, 'isoformat'):
+                h[k] = v.isoformat()
+    return jsonify({'alerts': history})

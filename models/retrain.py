@@ -1,7 +1,7 @@
 """
 retrain.py
 ==========
-Re-entrenamiento automático del modelo Poisson/Dixon-Coles.
+Re-entrenamiento automatico del modelo Poisson/Dixon-Coles.
 Usa get_historical_matches() igual que el arranque normal de la app.
 """
 
@@ -11,7 +11,6 @@ from datetime import datetime, timezone
 
 log = logging.getLogger(__name__)
 
-# ── Estado global ────────────────────────────────────────────
 _retrain_status = {
     "last_retrain":  None,
     "last_error":    None,
@@ -39,31 +38,29 @@ def run_retrain(poisson_model, logistic_model, calibrator, fetcher) -> dict:
         log.info("[Retrain] Iniciando re-entrenamiento...")
         start_time = datetime.now(timezone.utc)
 
-        # Usar el mismo metodo que usa el arranque normal
+        # Mismo metodo que el arranque normal
         df = fetcher.get_historical_matches(600)
 
         if df is None or len(df) < 100:
-            raise ValueError(f"Datos insuficientes para re-entrenar ({len(df) if df is not None else 0} partidos)")
+            raise ValueError(f"Datos insuficientes ({len(df) if df is not None else 0} partidos)")
 
-        log.info(f"[Retrain] {len(df)} partidos obtenidos de {df['league'].nunique()} ligas")
+        log.info(f"[Retrain] {len(df)} partidos, {df['league'].nunique()} ligas")
 
-        # Re-entrenar Poisson/Dixon-Coles
+        # 1. Re-entrenar Poisson/Dixon-Coles
         poisson_model.fit(df)
-        log.info(f"[Retrain] Poisson re-entrenado. rho={poisson_model.rho:.4f}")
+        log.info(f"[Retrain] Poisson OK. rho={poisson_model.rho:.4f}")
 
-        # Re-entrenar modelo logistico
-        features, labels = _build_logistic_features(df, poisson_model)
-        if len(features) >= 50:
-            logistic_model.fit(features, labels)
-            log.info(f"[Retrain] Logistic re-entrenado con {len(features)} muestras")
+        # 2. Re-entrenar LogisticModel (acepta df directamente)
+        logistic_model.fit(df)
+        log.info("[Retrain] Logistic OK")
 
-        # Re-calibrar Platt Scaling
-        if len(features) >= 50:
-            calibrator.calibrate(poisson_model, df)
-            log.info("[Retrain] Calibrador re-entrenado")
+        # 3. Re-calibrar (acepta proba_list y results)
+        proba_list, results = _build_calibration_data(df, poisson_model)
+        if len(proba_list) >= 50:
+            calibrator.fit(proba_list, results)
+            log.info("[Retrain] Calibrador OK")
 
         elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-
         metrics = {
             "total_matches":   int(len(df)),
             "total_leagues":   int(df["league"].nunique()),
@@ -79,7 +76,7 @@ def run_retrain(poisson_model, logistic_model, calibrator, fetcher) -> dict:
             _retrain_status["last_metrics"] = metrics
             _retrain_status["is_running"]   = False
 
-        log.info(f"[Retrain] Completado en {elapsed:.1f}s — {len(df)} partidos, rho={poisson_model.rho:.4f}")
+        log.info(f"[Retrain] Completado en {elapsed:.1f}s")
         return {"success": True, "message": "Re-entrenamiento exitoso", "metrics": metrics}
 
     except Exception as e:
@@ -102,24 +99,20 @@ def run_retrain_async(poisson_model, logistic_model, calibrator, fetcher):
     return t
 
 
-def _build_logistic_features(df, poisson_model):
-    features, labels = [], []
+def _build_calibration_data(df, poisson_model):
+    proba_list, results = [], []
     for _, row in df.iterrows():
         try:
-            probs = poisson_model.predict_proba(
+            p = poisson_model.predict_proba(
                 row["home_team"], row["away_team"], row["league"]
             )
-            features.append([
-                probs.get("home", 0.33),
-                probs.get("draw", 0.33),
-                probs.get("away", 0.33),
-            ])
+            proba_list.append(p)
             if row["home_goals"] > row["away_goals"]:
-                labels.append(0)
+                results.append("H")
             elif row["home_goals"] == row["away_goals"]:
-                labels.append(1)
+                results.append("D")
             else:
-                labels.append(2)
+                results.append("A")
         except Exception:
             continue
-    return features, labels
+    return proba_list, results

@@ -8,3 +8,5 @@ build/
 static/
 
 .env
+
+desktop/node_modules/

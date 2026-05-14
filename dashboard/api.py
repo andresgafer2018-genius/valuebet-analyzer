@@ -8,6 +8,8 @@ API REST – Producción (Railway)
 """
 
 import os, sys, logging
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 from pathlib import Path
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -18,6 +20,7 @@ sys.path.insert(0, str(ROOT))
 from data.fetcher import DataFetcher
 from models.engine import PoissonModel, LogisticModel, ValueBetDetector, ArbitrageDetector, ProbabilityCalibrator
 from database.db import init_db
+from models.retrain import run_retrain_async, get_retrain_status
 from database.models import get_bankroll, update_bankroll, save_alerts, get_alerts_history, get_bets, get_bet_stats, save_bet, resolve_bet
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -162,6 +165,20 @@ def static_files(path):
     if (static_dir / path).exists():
         return send_from_directory(str(static_dir), path)
     return app.send_static_file("index.html")
+
+
+
+@app.route("/api/retrain", methods=["POST"])
+def trigger_retrain():
+    status = get_retrain_status()
+    if status["is_running"]:
+        return jsonify({"message": "Ya en curso", "status": status}), 409
+    run_retrain_async(poisson, logistic, calibrator, fetcher)
+    return jsonify({"message": "Iniciado", "status": status})
+
+@app.route("/api/retrain/status", methods=["GET"])
+def retrain_status():
+    return jsonify(get_retrain_status())
 
 if __name__ == "__main__":
     import threading, webbrowser

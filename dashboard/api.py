@@ -170,10 +170,18 @@ def static_files(path):
 
 @app.route("/api/retrain", methods=["POST"])
 def trigger_retrain():
+    import sys
+    _mod = sys.modules[__name__]
+    _pm = getattr(_mod, "pm", None)
+    _lm = getattr(_mod, "lm", None)
+    _cal = getattr(_mod, "cal", None)
+    _f = getattr(_mod, "fetcher", None)
+    if _pm is None:
+        return jsonify({"message": "Modelo no inicializado"}), 503
     status = get_retrain_status()
     if status["is_running"]:
         return jsonify({"message": "Ya en curso", "status": status}), 409
-    run_retrain_async(pm, lm, cal, fetcher)
+    run_retrain_async(_pm, _lm, _cal, _f)
     return jsonify({"message": "Iniciado", "status": status})
 
 @app.route("/api/retrain/status", methods=["GET"])

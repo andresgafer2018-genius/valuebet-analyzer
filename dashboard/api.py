@@ -53,12 +53,17 @@ _state = {
 def _train_and_analyze():
     log.info("Entrenando modelos...")
     fetcher = DataFetcher()
+_models = {}  # Referencia global para endpoints
     df      = fetcher.get_historical_matches(400)
     pm = PoissonModel(); pm.fit(df)
     lm = LogisticModel(); lm.fit(df)
 
     # Calibración de probabilidades (Platt Scaling)
     cal = ProbabilityCalibrator()
+_models["pm"] = pm if "pm" in dir() else None
+_models["lm"] = lm if "lm" in dir() else None
+_models["cal"] = cal
+_models["fetcher"] = fetcher
     proba_list = []
     results    = []
     for _, row in df.iterrows():
@@ -170,12 +175,10 @@ def static_files(path):
 
 @app.route("/api/retrain", methods=["POST"])
 def trigger_retrain():
-    import sys
-    _mod = sys.modules[__name__]
-    _pm = getattr(_mod, "pm", None)
-    _lm = getattr(_mod, "lm", None)
-    _cal = getattr(_mod, "cal", None)
-    _f = getattr(_mod, "fetcher", None)
+    _pm  = _models.get("pm")
+    _lm  = _models.get("lm")
+    _cal = _models.get("cal")
+    _f   = _models.get("fetcher")
     if _pm is None:
         return jsonify({"message": "Modelo no inicializado"}), 503
     status = get_retrain_status()

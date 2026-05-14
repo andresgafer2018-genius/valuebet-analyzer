@@ -51,19 +51,15 @@ _state = {
 }
 
 def _train_and_analyze():
+    global pm, lm, cal, fetcher
     log.info("Entrenando modelos...")
     fetcher = DataFetcher()
-_models = {}  # Referencia global para endpoints
     df      = fetcher.get_historical_matches(400)
     pm = PoissonModel(); pm.fit(df)
     lm = LogisticModel(); lm.fit(df)
 
     # Calibración de probabilidades (Platt Scaling)
     cal = ProbabilityCalibrator()
-    _models["pm"] = pm if "pm" in dir() else None
-    _models["lm"] = lm if "lm" in dir() else None
-    _models["cal"] = cal
-    _models["fetcher"] = fetcher
     proba_list = []
     results    = []
     for _, row in df.iterrows():
@@ -175,16 +171,10 @@ def static_files(path):
 
 @app.route("/api/retrain", methods=["POST"])
 def trigger_retrain():
-    _pm  = _models.get("pm")
-    _lm  = _models.get("lm")
-    _cal = _models.get("cal")
-    _f   = _models.get("fetcher")
-    if _pm is None:
-        return jsonify({"message": "Modelo no inicializado"}), 503
     status = get_retrain_status()
     if status["is_running"]:
         return jsonify({"message": "Ya en curso", "status": status}), 409
-    run_retrain_async(_pm, _lm, _cal, _f)
+    run_retrain_async(pm, lm, cal, fetcher)
     return jsonify({"message": "Iniciado", "status": status})
 
 @app.route("/api/retrain/status", methods=["GET"])

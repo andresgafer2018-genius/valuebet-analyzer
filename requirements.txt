@@ -11,3 +11,5 @@ python-dotenv
 psycopg2-binary==2.9.9
 # psycopg2 fix
 # apscheduler fix
+
+APScheduler==3.10.4

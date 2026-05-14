@@ -1,4 +1,4 @@
-﻿"""
+"""
 API REST – Producción (Railway)
 ================================
 - CORS configurado para aceptar el dominio de Vercel
@@ -60,10 +60,10 @@ _models = {}  # Referencia global para endpoints
 
     # Calibración de probabilidades (Platt Scaling)
     cal = ProbabilityCalibrator()
-_models["pm"] = pm if "pm" in dir() else None
-_models["lm"] = lm if "lm" in dir() else None
-_models["cal"] = cal
-_models["fetcher"] = fetcher
+    _models["pm"] = pm if "pm" in dir() else None
+    _models["lm"] = lm if "lm" in dir() else None
+    _models["cal"] = cal
+    _models["fetcher"] = fetcher
     proba_list = []
     results    = []
     for _, row in df.iterrows():

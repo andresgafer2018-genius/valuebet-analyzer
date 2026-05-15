@@ -452,7 +452,6 @@ export default function App() {
   const [newBankroll,  setNewBankroll]    = useState("")
   const [showHelp,     setShowHelp]       = useState(false)
   const [expandedRow,  setExpandedRow]    = useState(null)
-  const [expandedRow,  setExpandedRow]    = useState(null)
 
   const loadAll = useCallback(async () => {
     try {

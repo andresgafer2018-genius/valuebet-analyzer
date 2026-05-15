@@ -692,7 +692,7 @@ export default function App() {
             <Panel title="APUESTAS DE VALOR DETECTADAS — TIEMPO REAL">
               {/* Table header */}
               <div style={{ display:"grid",
-                gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px 60px",
+                gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px",
                 gap:8, padding:"8px 14px", borderBottom:`1px solid ${C.border}`, background:C.bg3 }}>
                 {[
                   {h:"", tip:""},
@@ -703,8 +703,7 @@ export default function App() {
                   {h:"PROB. MODELO", tip:"Probabilidad calculada por el modelo"},
                   {h:"VENTAJA", tip:"Edge sobre la casa de apuestas"},
                   {h:"APOSTAR", tip:"Monto sugerido según tu capital"},
-                  {h:"% CAPITAL", tip:"Porcentaje de tu bankroll a usar"},
-                  {h:"INFO", tip:"Ver forma reciente y H2H"},
+                  {h:"% CAP / INFO", tip:"% del bankroll · clic ▼ info para ver forma y H2H"},
                 ].map(({h, tip}, i) => (
                   <span key={i} title={tip} style={{ fontSize:10, color:C.text2,
                     fontFamily:"'JetBrains Mono',monospace", letterSpacing:".06em", cursor: tip ? "help" : "default" }}>{h}</span>
@@ -731,7 +730,7 @@ export default function App() {
                     <div key={rowKey} style={{ borderBottom:`1px solid ${C.border}` }}>
                       <div className="alert-row"
                         style={{ display:"grid",
-                          gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px 60px",
+                          gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px",
                           gap:8, padding:"10px 14px",
                           background: isExp ? C.bg3 : selected.has(rowKey) ? C.greenDim : "transparent",
                           borderLeft: selected.has(rowKey) ? `3px solid ${C.green}` : isExp ? `3px solid ${C.blue}` : "3px solid transparent",
@@ -770,17 +769,19 @@ export default function App() {
                           fontFamily:"'JetBrains Mono',monospace" }}>+{a.edge_pct?.toFixed(1)}%</span>
                         <span style={{ fontSize:13, fontWeight:700, color:C.green,
                           fontFamily:"'JetBrains Mono',monospace" }}>${stake}</span>
-                        <span style={{ fontSize:12, color:C.text2,
-                          fontFamily:"'JetBrains Mono',monospace" }}>{(a.kelly_frac*100).toFixed(1)}%</span>
-                        {/* Botón expandir — columna dedicada */}
-                        <button onClick={()=>setExpandedRow(isExp?null:rowKey)}
-                          style={{ background: isExp?C.blue+"30":"none",
-                            border:`1px solid ${isExp?C.blue:C.border2}`,
-                            color: isExp?C.blue:C.text2, borderRadius:4,
-                            padding:"3px 8px", fontSize:11, cursor:"pointer",
-                            fontFamily:"'JetBrains Mono',monospace", whiteSpace:"nowrap" }}>
-                          {isExp?"▲ ":"▼ "}info
-                        </button>
+                        {/* % Capital + botón info en misma celda */}
+                        <div style={{ display:"flex", flexDirection:"column", gap:3, alignItems:"flex-start" }}>
+                          <span style={{ fontSize:12, color:C.text2,
+                            fontFamily:"'JetBrains Mono',monospace" }}>{(a.kelly_frac*100).toFixed(1)}%</span>
+                          <button onClick={()=>setExpandedRow(isExp?null:rowKey)}
+                            style={{ background: isExp?C.blue+"25":"none",
+                              border:`1px solid ${isExp?C.blue:C.border2}`,
+                              color: isExp?C.blue:C.text2, borderRadius:3,
+                              padding:"1px 6px", fontSize:10, cursor:"pointer",
+                              fontFamily:"'JetBrains Mono',monospace" }}>
+                            {isExp?"▲ cerrar":"▼ info"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )

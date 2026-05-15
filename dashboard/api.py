@@ -76,8 +76,20 @@ def _train_and_analyze():
     for match in upcoming:
         pred = pm.predict_proba(match["home_team"], match["away_team"], match["league"])
 
-        # Mezcla Poisson + LogReg (60/40)
-        pred_lr = lm.predict_proba(match["home_team"], match["away_team"], pred["lambda_home"], pred["lambda_away"])
+        # Extraer forma y H2H ya calculados por el Poisson
+        form_home = pred.get("form_home", {})
+        form_away = pred.get("form_away", {})
+        h2h       = pred.get("h2h", {})
+
+        # Mezcla Poisson + LogReg (60/40) con variables adicionales
+        pred_lr = lm.predict_proba(
+            match["home_team"], match["away_team"],
+            pred["lambda_home"], pred["lambda_away"],
+            form_att_home=form_home.get("form_factor_att", 1.0),
+            form_att_away=form_away.get("form_factor_att", 1.0),
+            h2h_home_wr=h2h.get("home_win_rate", 0.33),
+            h2h_away_wr=h2h.get("away_win_rate", 0.33),
+        )
         if pred_lr:
             ph = pred["p_home"]*0.6 + pred_lr["lr_p_home"]*0.4
             pd = pred["p_draw"]*0.6 + pred_lr["lr_p_draw"]*0.4

@@ -56,6 +56,10 @@ class PoissonModel:
     Estima parámetros de ataque y defensa por equipo usando MLE iterativo,
     y aplica la corrección Dixon-Coles (factor τ con parámetro ρ) para
     corregir la sobreestimación de resultados bajos (0-0, 1-0, 0-1, 1-1).
+
+    Variables adicionales integradas:
+      - Forma reciente (últimos N partidos): ajusta lambdas según rendimiento reciente
+      - H2H (historial directo): sesgo basado en victorias históricas entre los dos equipos
     """
 
     def __init__(self):
@@ -65,6 +69,8 @@ class PoissonModel:
         self.league_avg     = {}
         self.rho            = -0.13
         self.is_fitted      = False
+        # Historial completo para forma reciente y H2H
+        self._df_history: pd.DataFrame | None = None
 
     def _expected_goals(self, home: str, away: str, league: str) -> tuple[float, float]:
         avg = self.league_avg.get(league, 1.35)
@@ -177,12 +183,154 @@ class PoissonModel:
         self.attack_params  = att
         self.defense_params = deff
         self.is_fitted      = True
+        # Guardar historial para forma reciente y H2H
+        self._df_history    = df.copy()
         print(f"[Poisson] OK en {iteration+1} iteraciones. Home advantage: {self.home_advantage:.3f}")
 
         self.rho = self._estimate_rho(df)
 
+    def get_recent_form(self, team: str, n: int = 5) -> dict:
+        """
+        Calcula la forma reciente de un equipo en los últimos N partidos.
+        Retorna:
+          - goals_scored_avg:   promedio de goles marcados
+          - goals_conceded_avg: promedio de goles encajados
+          - win_rate:           % de victorias
+          - form_factor_att:    multiplicador de ataque (>1 = mejor forma, <1 = peor)
+          - form_factor_def:    multiplicador de defensa (>1 = peor defensa, <1 = mejor)
+          - n_matches:          partidos encontrados
+        """
+        if self._df_history is None or len(self._df_history) == 0:
+            return {"form_factor_att": 1.0, "form_factor_def": 1.0, "n_matches": 0}
+
+        df = self._df_history
+        # Partidos como local
+        home_rows = df[df["home_team"] == team].tail(n)
+        # Partidos como visitante
+        away_rows = df[df["away_team"] == team].tail(n)
+
+        # Combinar y tomar los últimos N
+        scored, conceded, wins = [], [], 0
+
+        for _, r in home_rows.iterrows():
+            scored.append(r["home_goals"])
+            conceded.append(r["away_goals"])
+            if r["home_goals"] > r["away_goals"]:
+                wins += 1
+
+        for _, r in away_rows.iterrows():
+            scored.append(r["away_goals"])
+            conceded.append(r["home_goals"])
+            if r["away_goals"] > r["home_goals"]:
+                wins += 1
+
+        total = len(scored)
+        if total == 0:
+            return {"form_factor_att": 1.0, "form_factor_def": 1.0, "n_matches": 0}
+
+        scored_avg   = np.mean(scored)
+        conceded_avg = np.mean(conceded)
+        win_rate     = wins / total
+
+        # Forma relativa a la media global del historial
+        global_scored_avg = (
+            df["home_goals"].mean() + df["away_goals"].mean()
+        ) / 2 or 1.3
+
+        # Factor de ataque: cuánto mejor/peor convierte respecto a la media
+        form_factor_att = np.clip(scored_avg / global_scored_avg, 0.7, 1.4)
+        # Factor de defensa: cuánto más/menos encaja (invertido: menos goles = mejor)
+        form_factor_def = np.clip(global_scored_avg / (conceded_avg + 0.1), 0.7, 1.4)
+
+        return {
+            "goals_scored_avg":   round(float(scored_avg), 2),
+            "goals_conceded_avg": round(float(conceded_avg), 2),
+            "win_rate":           round(float(win_rate), 3),
+            "form_factor_att":    round(float(form_factor_att), 4),
+            "form_factor_def":    round(float(form_factor_def), 4),
+            "n_matches":          total,
+        }
+
+    def get_h2h_factor(self, home: str, away: str, n: int = 10) -> dict:
+        """
+        Calcula el factor H2H (historial directo) entre dos equipos.
+        Considera los últimos N enfrentamientos (en cualquier condición).
+        Retorna:
+          - home_win_rate:    % que ganó el equipo local en estos H2H
+          - away_win_rate:    % que ganó el equipo visitante en estos H2H
+          - draw_rate:        % de empates
+          - avg_goals_home:   promedio de goles del equipo local en H2H
+          - avg_goals_away:   promedio de goles del equipo visitante en H2H
+          - h2h_bias_home:    factor multiplicador para lambda_home (>1 favorece local)
+          - h2h_bias_away:    factor multiplicador para lambda_away (>1 favorece visitante)
+          - n_matches:        partidos H2H encontrados
+        """
+        if self._df_history is None or len(self._df_history) == 0:
+            return {"h2h_bias_home": 1.0, "h2h_bias_away": 1.0, "n_matches": 0}
+
+        df = self._df_history
+
+        # Buscar enfrentamientos directos en ambas direcciones
+        h2h_direct  = df[(df["home_team"] == home) & (df["away_team"] == away)].tail(n)
+        h2h_reverse = df[(df["home_team"] == away) & (df["away_team"] == home)].tail(n)
+
+        home_wins, away_wins, draws = 0, 0, 0
+        goals_home, goals_away = [], []
+
+        for _, r in h2h_direct.iterrows():
+            goals_home.append(r["home_goals"])
+            goals_away.append(r["away_goals"])
+            if r["home_goals"] > r["away_goals"]:
+                home_wins += 1
+            elif r["home_goals"] == r["away_goals"]:
+                draws += 1
+            else:
+                away_wins += 1
+
+        for _, r in h2h_reverse.iterrows():
+            # En encuentros inversos, "home" jugó de visitante
+            goals_home.append(r["away_goals"])
+            goals_away.append(r["home_goals"])
+            if r["away_goals"] > r["home_goals"]:
+                home_wins += 1
+            elif r["away_goals"] == r["home_goals"]:
+                draws += 1
+            else:
+                away_wins += 1
+
+        total = len(goals_home)
+        if total == 0:
+            return {"h2h_bias_home": 1.0, "h2h_bias_away": 1.0, "n_matches": 0}
+
+        home_wr = home_wins / total
+        away_wr = away_wins / total
+        draw_r  = draws / total
+
+        avg_gh = np.mean(goals_home)
+        avg_ga = np.mean(goals_away)
+
+        # Bias: si el equipo local domina el H2H, sus lambdas suben levemente
+        # Escala suave: máx ±15%
+        h2h_bias_home = np.clip(1.0 + (home_wr - away_wr) * 0.3, 0.85, 1.15)
+        h2h_bias_away = np.clip(1.0 + (away_wr - home_wr) * 0.3, 0.85, 1.15)
+
+        return {
+            "home_win_rate":  round(float(home_wr), 3),
+            "away_win_rate":  round(float(away_wr), 3),
+            "draw_rate":      round(float(draw_r), 3),
+            "avg_goals_home": round(float(avg_gh), 2),
+            "avg_goals_away": round(float(avg_ga), 2),
+            "h2h_bias_home":  round(float(h2h_bias_home), 4),
+            "h2h_bias_away":  round(float(h2h_bias_away), 4),
+            "n_matches":      total,
+        }
+
     def predict_proba(self, home: str, away: str, league: str,
-                       max_goals: int = 8) -> dict:
+                       max_goals: int = 8,
+                       use_form: bool = True,
+                       use_h2h: bool = True,
+                       form_weight: float = 0.25,
+                       h2h_weight: float = 0.15) -> dict:
         if home not in self.attack_params:
             td  = TEAMS_DB.get(home, {"att": 1.2, "def": 1.1, "elo": 1650})
             avg = self.league_avg.get(league, 1.35)
@@ -196,6 +344,37 @@ class PoissonModel:
         else:
             lambda_h, lambda_a = self._expected_goals(home, away, league)
 
+        # ── Forma reciente ──────────────────────────────────────────────────
+        form_home = {"form_factor_att": 1.0, "form_factor_def": 1.0, "n_matches": 0}
+        form_away = {"form_factor_att": 1.0, "form_factor_def": 1.0, "n_matches": 0}
+        if use_form:
+            form_home = self.get_recent_form(home, n=5)
+            form_away = self.get_recent_form(away, n=5)
+
+            # Ajuste: forma afecta lambdas con peso form_weight
+            # lambda_home sube si el local ataca bien Y el visitante defiende mal
+            form_mult_h = (
+                1.0 * (1 - form_weight) +
+                form_home["form_factor_att"] * form_away["form_factor_def"] * form_weight
+            )
+            form_mult_a = (
+                1.0 * (1 - form_weight) +
+                form_away["form_factor_att"] * form_home["form_factor_def"] * form_weight
+            )
+            lambda_h *= form_mult_h
+            lambda_a *= form_mult_a
+
+        # ── H2H ────────────────────────────────────────────────────────────
+        h2h = {"h2h_bias_home": 1.0, "h2h_bias_away": 1.0, "n_matches": 0}
+        if use_h2h:
+            h2h = self.get_h2h_factor(home, away, n=10)
+
+            # Ajuste: H2H sesga lambdas con peso h2h_weight (solo si hay suficientes partidos)
+            if h2h["n_matches"] >= 3:
+                lambda_h *= (1.0 * (1 - h2h_weight) + h2h["h2h_bias_home"] * h2h_weight)
+                lambda_a *= (1.0 * (1 - h2h_weight) + h2h["h2h_bias_away"] * h2h_weight)
+
+        # ── Score matrix (Dixon-Coles) ──────────────────────────────────────
         score_matrix = np.zeros((max_goals + 1, max_goals + 1))
         for i in range(max_goals + 1):
             for j in range(max_goals + 1):
@@ -227,6 +406,10 @@ class PoissonModel:
             "lambda_home": round(lambda_h, 3),
             "lambda_away": round(lambda_a, 3),
             "rho":         round(self.rho, 4),
+            # Variables adicionales (para UI y debugging)
+            "form_home":   form_home,
+            "form_away":   form_away,
+            "h2h":         h2h,
         }
 
     def save(self):
@@ -266,6 +449,11 @@ class LogisticModel:
                 home_td["att"] - away_td["att"],
                 home_td["def"] - away_td["def"],
                 home_td["att"] * away_td["def"],
+                # Variables adicionales: forma reciente y H2H (si están presentes)
+                float(row.get("form_att_home", 1.0)),
+                float(row.get("form_att_away", 1.0)),
+                float(row.get("h2h_home_wr", 0.33)),
+                float(row.get("h2h_away_wr", 0.33)),
             ])
         return np.array(features)
 
@@ -281,7 +469,9 @@ class LogisticModel:
         print(f"[LogReg] CV Accuracy: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
 
     def predict_proba(self, home: str, away: str,
-                       lambda_home: float, lambda_away: float) -> dict:
+                       lambda_home: float, lambda_away: float,
+                       form_att_home: float = 1.0, form_att_away: float = 1.0,
+                       h2h_home_wr: float = 0.33, h2h_away_wr: float = 0.33) -> dict:
         if not self.is_fitted:
             return {}
         home_td = TEAMS_DB.get(home, {"att": 1.2, "def": 1.1, "elo": 1700})
@@ -294,6 +484,10 @@ class LogisticModel:
             home_td["att"] - away_td["att"],
             home_td["def"] - away_td["def"],
             home_td["att"] * away_td["def"],
+            form_att_home,
+            form_att_away,
+            h2h_home_wr,
+            h2h_away_wr,
         ]])
         X_scaled = self.scaler.transform(X)
         proba = self.model.predict_proba(X_scaled)[0]

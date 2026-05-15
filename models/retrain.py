@@ -3,6 +3,7 @@ retrain.py
 ==========
 Re-entrenamiento automatico del modelo Poisson/Dixon-Coles.
 Usa get_historical_matches() igual que el arranque normal de la app.
+El status se persiste en PostgreSQL para sobrevivir reinicios de Fly.io.
 """
 
 import logging
@@ -11,19 +12,55 @@ from datetime import datetime, timezone
 
 log = logging.getLogger(__name__)
 
+# ── Status in-memory (fallback si no hay DB) ───────────────────────────────
 _retrain_status = {
-    "last_retrain":  None,
-    "last_error":    None,
-    "is_running":    False,
-    "total_runs":    0,
-    "last_metrics":  {},
+    "last_retrain": None,
+    "last_error":   None,
+    "is_running":   False,
+    "total_runs":   0,
+    "last_metrics": {},
 }
 _retrain_lock = threading.Lock()
 
+# ── Helpers DB (importación diferida para evitar circular imports) ──────────
+
+def _db_get() -> dict:
+    try:
+        from database.db import get_retrain_status_db
+        return get_retrain_status_db()
+    except Exception:
+        return {}
+
+def _db_update(**kwargs):
+    try:
+        from database.db import update_retrain_status_db
+        update_retrain_status_db(**kwargs)
+    except Exception as e:
+        log.warning(f"[Retrain] No se pudo persistir status en DB: {e}")
+
 
 def get_retrain_status() -> dict:
+    """
+    Devuelve el status actual.
+    Si hay DB disponible, combina DB (persistente) + memoria (is_running en vivo).
+    """
     with _retrain_lock:
-        return dict(_retrain_status)
+        mem = dict(_retrain_status)
+
+    # Intentar enriquecer con datos persistidos en DB
+    db_status = _db_get()
+    if db_status:
+        # is_running siempre lo tomamos de memoria (más fresco)
+        db_status["is_running"] = mem["is_running"]
+        # Si no tenemos historial en memoria pero sí en DB, usamos DB
+        if not mem["last_retrain"] and db_status.get("last_retrain"):
+            return db_status
+        # Si tenemos en memoria, es más fresco
+        if mem["last_retrain"]:
+            return mem
+        return db_status
+
+    return mem
 
 
 def run_retrain(poisson_model, logistic_model, calibrator, fetcher) -> dict:
@@ -34,11 +71,14 @@ def run_retrain(poisson_model, logistic_model, calibrator, fetcher) -> dict:
             return {"success": False, "message": "Re-entrenamiento ya en curso", "metrics": {}}
         _retrain_status["is_running"] = True
 
+    # Marcar como running también en DB
+    _db_update(is_running=True, last_error=None)
+
     try:
         log.info("[Retrain] Iniciando re-entrenamiento...")
         start_time = datetime.now(timezone.utc)
 
-        # Mismo metodo que el arranque normal
+        # Mismo método que el arranque normal
         df = fetcher.get_historical_matches(600)
 
         if df is None or len(df) < 100:
@@ -76,6 +116,15 @@ def run_retrain(poisson_model, logistic_model, calibrator, fetcher) -> dict:
             _retrain_status["last_metrics"] = metrics
             _retrain_status["is_running"]   = False
 
+        # Persistir en DB
+        _db_update(
+            last_retrain=start_time,
+            last_error=None,
+            is_running=False,
+            total_runs=_retrain_status["total_runs"],
+            last_metrics=metrics,
+        )
+
         log.info(f"[Retrain] Completado en {elapsed:.1f}s")
         return {"success": True, "message": "Re-entrenamiento exitoso", "metrics": metrics}
 
@@ -85,6 +134,10 @@ def run_retrain(poisson_model, logistic_model, calibrator, fetcher) -> dict:
         with _retrain_lock:
             _retrain_status["last_error"] = error_msg
             _retrain_status["is_running"] = False
+
+        # Persistir error en DB
+        _db_update(is_running=False, last_error=error_msg)
+
         return {"success": False, "message": error_msg, "metrics": {}}
 
 

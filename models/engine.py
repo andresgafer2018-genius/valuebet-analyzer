@@ -643,6 +643,10 @@ class ValueBetDetector:
                     "lambda_away":  prediction.get("lambda_away", 0),
                     "rho":          prediction.get("rho", -0.13),
                     "calibrated":   prediction.get("calibrated", False),
+                    # Variables adicionales para UI
+                    "form_home":    match.get("form_home", {}),
+                    "form_away":    match.get("form_away", {}),
+                    "h2h":          match.get("h2h", {}),
                 })
 
         return sorted(alerts, key=lambda x: x["edge_pct"], reverse=True)

@@ -102,8 +102,10 @@ def _train_and_analyze():
 
         odds_list = [fetcher.get_simulated_odds(match) for _ in range(3)]
         closing_odds = fetcher.get_closing_odds(match, odds_list[0], pred)
+        # Enriquecer match con forma y H2H para que lleguen a las alertas
+        match_enriched = {**match, "form_home": form_home, "form_away": form_away, "h2h": h2h}
         for odds in odds_list:
-            all_alerts.extend(det.detect(pred, odds, match, closing_odds))
+            all_alerts.extend(det.detect(pred, odds, match_enriched, closing_odds))
         arb = arb_det.detect_arb(odds_list)
         if arb:
             arbs.append({**arb, "match": f"{match['home_team']} vs {match['away_team']}", "league": match["league"]})

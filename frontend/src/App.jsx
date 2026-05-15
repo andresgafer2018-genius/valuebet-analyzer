@@ -300,13 +300,13 @@ function HelpPanel({ onClose }) {
 }
 
 /* ─── FORM & H2H PANEL ──────────────────────────────────────────────────── */
+/* ─── FORM & H2H PANEL ──────────────────────────────────────────────────── */
 function FormBar({ value, max = 1.4, color }) {
   const pct = Math.min((value / max) * 100, 100)
   return (
     <div style={{ display:"flex", alignItems:"center", gap:6, flex:1 }}>
-      <div style={{ flex:1, height:4, borderRadius:2, background:C.bg1, overflow:"hidden" }}>
-        <div style={{ width:`${pct}%`, height:"100%", background:color, borderRadius:2,
-          transition:"width .4s ease" }}/>
+      <div style={{ flex:1, height:4, borderRadius:2, background:"#0d0f16", overflow:"hidden" }}>
+        <div style={{ width:`${pct}%`, height:"100%", background:color, borderRadius:2 }}/>
       </div>
       <span style={{ fontSize:11, color, fontFamily:"'JetBrains Mono',monospace",
         minWidth:32, textAlign:"right", fontWeight:700 }}>{value?.toFixed(2)}</span>
@@ -314,138 +314,117 @@ function FormBar({ value, max = 1.4, color }) {
   )
 }
 
-function FormH2HPanel({ alert }) {
-  const fh = alert.form_home || {}
-  const fa = alert.form_away || {}
+function FormH2HPanel({ alert, onClose }) {
+  const fh  = alert.form_home || {}
+  const fa  = alert.form_away || {}
   const h2h = alert.h2h || {}
-  const hasForm = fh.n_matches > 0 || fa.n_matches > 0
-  const hasH2H  = h2h.n_matches > 0
-
-  const formColor = v => v >= 1.1 ? C.green : v <= 0.9 ? C.red : C.amber
+  const G = { green:"#00d4a0", amber:"#f5a623", red:"#e84040", blue:"#4d9cf5",
+    bg1:"#0d0f16", bg2:"#12151f", bg3:"#181c28", border:"#1e2438", text0:"#e8ecf5", text2:"#505872" }
+  const fc = v => v >= 1.05 ? G.green : v <= 0.95 ? G.red : G.amber
 
   return (
-    <div style={{ padding:"10px 14px 14px 46px", background:C.bg1,
-      borderBottom:`1px solid ${C.border}`, animation:"fadeIn .2s ease" }}>
+    <div style={{ background:G.bg2, border:`1px solid ${G.blue}40`,
+      borderTop:`2px solid ${G.blue}`, padding:"14px 16px", animation:"fadeIn .2s ease" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+        <span style={{ fontSize:11, color:G.blue, fontFamily:"'JetBrains Mono',monospace",
+          letterSpacing:".08em", fontWeight:700 }}>
+          📊 FORMA RECIENTE & H2H — {alert.home_team} vs {alert.away_team}
+        </span>
+        <button onClick={onClose} style={{ background:"none", border:"none",
+          color:G.text2, cursor:"pointer", fontSize:14 }}>✕</button>
+      </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
-
         {/* Forma Local */}
-        <div style={{ background:C.bg2, border:`1px solid ${C.border}`, borderRadius:5, padding:"10px 12px" }}>
-          <div style={{ fontSize:10, color:C.text2, fontFamily:"'JetBrains Mono',monospace",
-            letterSpacing:".08em", marginBottom:8 }}>
-            FORMA RECIENTE — {alert.home_team?.toUpperCase()}
-          </div>
-          {!hasForm || fh.n_matches === 0
-            ? <span style={{ fontSize:11, color:C.text2 }}>Sin datos históricos</span>
-            : <>
-              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+        <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
+          <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
+            letterSpacing:".08em", marginBottom:8 }}>LOCAL — {alert.home_team?.toUpperCase()}</div>
+          {fh.n_matches === 0
+            ? <span style={{ fontSize:11, color:G.text2 }}>Sin historial (partidos simulados)</span>
+            : <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontSize:11, color:C.text2, minWidth:100 }}>⚽ Goles marcados</span>
-                  <FormBar value={fh.form_factor_att} color={formColor(fh.form_factor_att)}/>
+                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>⚽ Ataque</span>
+                  <FormBar value={fh.form_factor_att||1} color={fc(fh.form_factor_att||1)}/>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontSize:11, color:C.text2, minWidth:100 }}>🛡 Defensa</span>
-                  <FormBar value={fh.form_factor_def} color={formColor(fh.form_factor_def)}/>
+                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>🛡 Defensa</span>
+                  <FormBar value={fh.form_factor_def||1} color={fc(fh.form_factor_def||1)}/>
                 </div>
-                <div style={{ display:"flex", gap:10, marginTop:4, flexWrap:"wrap" }}>
-                  <span style={{ fontSize:10, color:C.text2, background:C.bg3,
-                    padding:"2px 7px", borderRadius:3 }}>
-                    Avg goles: <b style={{color:C.text0}}>{fh.goals_scored_avg}</b>
+                <div style={{ display:"flex", gap:8, marginTop:4, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    Goles: <b style={{color:G.text0}}>{fh.goals_scored_avg}</b>
                   </span>
-                  <span style={{ fontSize:10, color:C.text2, background:C.bg3,
-                    padding:"2px 7px", borderRadius:3 }}>
-                    Win rate: <b style={{color:C.green}}>{(fh.win_rate*100).toFixed(0)}%</b>
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    Win: <b style={{color:G.green}}>{((fh.win_rate||0)*100).toFixed(0)}%</b>
                   </span>
-                  <span style={{ fontSize:10, color:C.text2, background:C.bg3,
-                    padding:"2px 7px", borderRadius:3 }}>
-                    n={fh.n_matches} partidos
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    n={fh.n_matches}
                   </span>
                 </div>
               </div>
-            </>
           }
         </div>
-
         {/* Forma Visitante */}
-        <div style={{ background:C.bg2, border:`1px solid ${C.border}`, borderRadius:5, padding:"10px 12px" }}>
-          <div style={{ fontSize:10, color:C.text2, fontFamily:"'JetBrains Mono',monospace",
-            letterSpacing:".08em", marginBottom:8 }}>
-            FORMA RECIENTE — {alert.away_team?.toUpperCase()}
-          </div>
-          {!hasForm || fa.n_matches === 0
-            ? <span style={{ fontSize:11, color:C.text2 }}>Sin datos históricos</span>
-            : <>
-              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+        <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
+          <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
+            letterSpacing:".08em", marginBottom:8 }}>VISITANTE — {alert.away_team?.toUpperCase()}</div>
+          {fa.n_matches === 0
+            ? <span style={{ fontSize:11, color:G.text2 }}>Sin historial (partidos simulados)</span>
+            : <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontSize:11, color:C.text2, minWidth:100 }}>⚽ Goles marcados</span>
-                  <FormBar value={fa.form_factor_att} color={formColor(fa.form_factor_att)}/>
+                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>⚽ Ataque</span>
+                  <FormBar value={fa.form_factor_att||1} color={fc(fa.form_factor_att||1)}/>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontSize:11, color:C.text2, minWidth:100 }}>🛡 Defensa</span>
-                  <FormBar value={fa.form_factor_def} color={formColor(fa.form_factor_def)}/>
+                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>🛡 Defensa</span>
+                  <FormBar value={fa.form_factor_def||1} color={fc(fa.form_factor_def||1)}/>
                 </div>
-                <div style={{ display:"flex", gap:10, marginTop:4, flexWrap:"wrap" }}>
-                  <span style={{ fontSize:10, color:C.text2, background:C.bg3,
-                    padding:"2px 7px", borderRadius:3 }}>
-                    Avg goles: <b style={{color:C.text0}}>{fa.goals_scored_avg}</b>
+                <div style={{ display:"flex", gap:8, marginTop:4, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    Goles: <b style={{color:G.text0}}>{fa.goals_scored_avg}</b>
                   </span>
-                  <span style={{ fontSize:10, color:C.text2, background:C.bg3,
-                    padding:"2px 7px", borderRadius:3 }}>
-                    Win rate: <b style={{color:C.green}}>{(fa.win_rate*100).toFixed(0)}%</b>
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    Win: <b style={{color:G.green}}>{((fa.win_rate||0)*100).toFixed(0)}%</b>
                   </span>
-                  <span style={{ fontSize:10, color:C.text2, background:C.bg3,
-                    padding:"2px 7px", borderRadius:3 }}>
-                    n={fa.n_matches} partidos
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    n={fa.n_matches}
                   </span>
                 </div>
               </div>
-            </>
           }
         </div>
-
         {/* H2H */}
-        <div style={{ background:C.bg2, border:`1px solid ${C.border}`, borderRadius:5, padding:"10px 12px" }}>
-          <div style={{ fontSize:10, color:C.text2, fontFamily:"'JetBrains Mono',monospace",
-            letterSpacing:".08em", marginBottom:8 }}>
-            H2H — HISTORIAL DIRECTO
-          </div>
-          {!hasH2H
-            ? <span style={{ fontSize:11, color:C.text2 }}>Sin historial directo</span>
-            : <>
-              {/* Mini bar chart de resultados */}
-              <div style={{ display:"flex", gap:3, height:28, alignItems:"flex-end", marginBottom:8 }}>
-                {[
-                  { label:alert.home_team?.split(" ")[0], val:h2h.home_win_rate, color:C.green },
-                  { label:"Empate",                       val:h2h.draw_rate,     color:C.text2 },
-                  { label:alert.away_team?.split(" ")[0], val:h2h.away_win_rate, color:C.blue  },
-                ].map(b => (
-                  <div key={b.label} style={{ flex:1, display:"flex", flexDirection:"column",
-                    alignItems:"center", gap:2 }}>
-                    <div style={{ width:"100%", borderRadius:"2px 2px 0 0", background:b.color,
-                      height:`${Math.max(b.val*100, 4)}%`, transition:"height .4s ease" }}/>
-                    <span style={{ fontSize:9, color:b.color, fontFamily:"'JetBrains Mono',monospace",
-                      fontWeight:700 }}>{(b.val*100).toFixed(0)}%</span>
-                  </div>
-                ))}
+        <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
+          <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
+            letterSpacing:".08em", marginBottom:8 }}>H2H — HISTORIAL DIRECTO</div>
+          {h2h.n_matches === 0
+            ? <span style={{ fontSize:11, color:G.text2 }}>Sin enfrentamientos directos en el historial</span>
+            : <div>
+                <div style={{ display:"flex", gap:4, height:40, alignItems:"flex-end", marginBottom:8 }}>
+                  {[
+                    { label:alert.home_team?.split(" ")[0], val:h2h.home_win_rate||0, color:G.green },
+                    { label:"Empate",                       val:h2h.draw_rate||0,     color:G.text2 },
+                    { label:alert.away_team?.split(" ")[0], val:h2h.away_win_rate||0, color:G.blue  },
+                  ].map(b => (
+                    <div key={b.label} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
+                      <div style={{ width:"100%", borderRadius:"2px 2px 0 0", background:b.color,
+                        height:`${Math.max((b.val||0)*100, 5)}%` }}/>
+                      <span style={{ fontSize:9, color:b.color, fontFamily:"'JetBrains Mono',monospace", fontWeight:700 }}>
+                        {((b.val||0)*100).toFixed(0)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    Bias local: <b style={{color:(h2h.h2h_bias_home||1)>1?G.green:G.red}}>
+                      {((h2h.h2h_bias_home||1)-1)>=0?"+":""}{(((h2h.h2h_bias_home||1)-1)*100).toFixed(1)}%
+                    </b>
+                  </span>
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    n={h2h.n_matches} partidos
+                  </span>
+                </div>
               </div>
-              <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                <span style={{ fontSize:10, color:C.text2, background:C.bg3,
-                  padding:"2px 7px", borderRadius:3 }}>
-                  Bias local: <b style={{color:h2h.h2h_bias_home>1?C.green:C.red}}>
-                    {h2h.h2h_bias_home > 1 ? "+" : ""}{((h2h.h2h_bias_home-1)*100).toFixed(1)}%
-                  </b>
-                </span>
-                <span style={{ fontSize:10, color:C.text2, background:C.bg3,
-                  padding:"2px 7px", borderRadius:3 }}>
-                  Bias visit: <b style={{color:h2h.h2h_bias_away>1?C.green:C.red}}>
-                    {h2h.h2h_bias_away > 1 ? "+" : ""}{((h2h.h2h_bias_away-1)*100).toFixed(1)}%
-                  </b>
-                </span>
-                <span style={{ fontSize:10, color:C.text2, background:C.bg3,
-                  padding:"2px 7px", borderRadius:3 }}>
-                  n={h2h.n_matches} partidos
-                </span>
-              </div>
-            </>
           }
         </div>
       </div>
@@ -472,6 +451,7 @@ export default function App() {
   const [editBankroll, setEditBankroll]   = useState(false)
   const [newBankroll,  setNewBankroll]    = useState("")
   const [showHelp,     setShowHelp]       = useState(false)
+  const [expandedRow,  setExpandedRow]    = useState(null)
   const [expandedRow,  setExpandedRow]    = useState(null)
 
   const loadAll = useCallback(async () => {
@@ -748,67 +728,22 @@ export default function App() {
                   const stake   = Math.round(bk * a.kelly_frac)
                   const isExpanded = expandedRow === rowKey
                   return (
-                    <div key={rowKey}
-                      className="alert-row"
-                      onClick={() => setExpandedRow(isExpanded ? null : rowKey)}
-                      title="Clic para ver forma y H2H"
-                      style={{ display:"grid",
-                        gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px",
-                        gap:8, padding:"10px 14px", borderBottom:`1px solid ${C.border}`,
-                        background: isExpanded ? C.bg3 : selected.has(rowKey) ? C.greenDim : "transparent",
-                        borderLeft: selected.has(rowKey) ? `3px solid ${C.green}` : isExpanded ? `3px solid ${C.blue}` : "3px solid transparent",
-                        animation:`fadeIn .2s ease ${idx*.025}s both`, alignItems:"center" }}>
-                      <div onClick={e => { e.stopPropagation(); toggleSel(rowKey) }}
-                        style={{ width:15, height:15, borderRadius:3,
+                    <div key={rowKey}>
+                      <div className="alert-row"
+                        onClick={() => { toggleSel(rowKey); setExpandedRow(isExpanded ? null : rowKey) }}
+                        title="Clic para seleccionar · ver forma y H2H"
+                        style={{ display:"grid",
+                          gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px",
+                          gap:8, padding:"10px 14px", borderBottom: isExpanded ? "none" : `1px solid ${C.border}`,
+                          background:selected.has(rowKey)?C.greenDim:"transparent",
+                          borderLeft:selected.has(rowKey)?`3px solid ${C.green}`:"3px solid transparent",
+                          animation:`fadeIn .2s ease ${idx*.025}s both`, alignItems:"center" }}>
+                        <div style={{ width:15, height:15, borderRadius:3,
                           border:`1px solid ${selected.has(rowKey)?C.green:C.border2}`,
                           background:selected.has(rowKey)?C.green:"transparent",
-                          display:"flex", alignItems:"center", justifyContent:"center",
-                          flexShrink:0, cursor:"pointer" }}>
-                        {selected.has(rowKey) && <span style={{ fontSize:9, color:"#000", fontWeight:900, lineHeight:1 }}>✓</span>}
-                      </div>
-                      <Badge text={a.confidence} color={confColor(a.confidence)} bg={confBg(a.confidence)}/>
-                      <div style={{ minWidth:0 }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:5, overflow:"hidden" }}>
-                          <span style={{ fontSize:13, flexShrink:0 }}>{leagueIcon(a.league)}</span>
-                          <span style={{ fontSize:13, fontWeight:600, whiteSpace:"nowrap",
-                            overflow:"hidden", textOverflow:"ellipsis" }}>
-                            {a.home_team} <span style={{color:C.text2, fontWeight:400}}>vs</span> {a.away_team}
-                          </span>
+                          display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          {selected.has(rowKey) && <span style={{ fontSize:9, color:"#000", fontWeight:900, lineHeight:1 }}>✓</span>}
                         </div>
-                        <div style={{ fontSize:11, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginTop:2,
-                          display:"flex", alignItems:"center", gap:6 }}>
-                          <span>{a.league} · {a.kickoff} · λ {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}</span>
-                          <span style={{ color: isExpanded ? C.blue : C.text2, fontSize:10, fontWeight:700 }}>
-                            {isExpanded ? "▲ cerrar" : "▼ detalle"}
-                          </span>
-                        </div>
-                      </div>
-                      <span style={{ fontSize:12, color:C.text1, overflow:"hidden",
-                        textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                        {a.market_label || a.market}
-                      </span>
-                      <span style={{ fontSize:14, fontWeight:700, color:C.text0,
-                        fontFamily:"'JetBrains Mono',monospace" }}>{a.odd?.toFixed(2)}</span>
-                      <span style={{ fontSize:13, color:C.blue, fontFamily:"'JetBrains Mono',monospace", fontWeight:600 }}>
-                        {(a.p_model*100).toFixed(1)}%
-                      </span>
-                      <span style={{ fontSize:14, fontWeight:700,
-                        color:a.edge_pct>=15?C.green:a.edge_pct>=8?C.amber:C.text1,
-                        fontFamily:"'JetBrains Mono',monospace" }}>+{a.edge_pct?.toFixed(1)}%</span>
-                      <span style={{ fontSize:13, fontWeight:700, color:C.green,
-                        fontFamily:"'JetBrains Mono',monospace" }}>${stake}</span>
-                      <span style={{ fontSize:12, color:C.text2,
-                        fontFamily:"'JetBrains Mono',monospace" }}>{(a.kelly_frac*100).toFixed(1)}%</span>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Panel expandible FUERA del scroll */}
-              {expandedRow && (() => {
-                const a = filtered.find(x => x.match_id + x.market === expandedRow)
-                return a ? <FormH2HPanel alert={a}/> : null
-              })()}
                         <Badge text={a.confidence} color={confColor(a.confidence)} bg={confBg(a.confidence)}/>
                         <div style={{ minWidth:0 }}>
                           <div style={{ display:"flex", alignItems:"center", gap:5, overflow:"hidden" }}>
@@ -856,6 +791,17 @@ export default function App() {
                         <span style={{ fontSize:12, color:C.text2,
                           fontFamily:"'JetBrains Mono',monospace" }}>{(a.kelly_frac*100).toFixed(1)}%</span>
                       </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Panel forma/H2H — fuera del scroll */}
+              {expandedRow && (() => {
+                const a = filtered.find(x => x.match_id + x.market === expandedRow)
+                return a ? <FormH2HPanel alert={a} onClose={() => setExpandedRow(null)}/> : null
+              })()}
+
               {/* Footer */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
                 padding:"9px 14px", borderTop:`1px solid ${C.border}`, background:C.bg3 }}>

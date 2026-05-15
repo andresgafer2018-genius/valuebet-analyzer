@@ -725,71 +725,54 @@ export default function App() {
                 {!loading && filtered.map((a, idx) => {
                   const rowKey  = a.match_id + a.market
                   const stake   = Math.round(bk * a.kelly_frac)
-                  const isExpanded = expandedRow === rowKey
+                  const isExp   = expandedRow === rowKey
                   return (
-                    <div key={rowKey}>
-                      <div className="alert-row"
-                        onClick={() => { toggleSel(rowKey); setExpandedRow(isExpanded ? null : rowKey) }}
-                        title="Clic para seleccionar · ver forma y H2H"
-                        style={{ display:"grid",
-                          gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px",
-                          gap:8, padding:"10px 14px", borderBottom: isExpanded ? "none" : `1px solid ${C.border}`,
-                          background:selected.has(rowKey)?C.greenDim:"transparent",
-                          borderLeft:selected.has(rowKey)?`3px solid ${C.green}`:"3px solid transparent",
-                          animation:`fadeIn .2s ease ${idx*.025}s both`, alignItems:"center" }}>
-                        <div style={{ width:15, height:15, borderRadius:3,
+                    <div key={rowKey} className="alert-row"
+                      onClick={() => setExpandedRow(isExp ? null : rowKey)}
+                      style={{ display:"grid",
+                        gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px",
+                        gap:8, padding:"10px 14px", borderBottom:`1px solid ${C.border}`,
+                        background: isExp ? C.bg3 : selected.has(rowKey) ? C.greenDim : "transparent",
+                        borderLeft: selected.has(rowKey) ? `3px solid ${C.green}` : isExp ? `3px solid ${C.blue}` : "3px solid transparent",
+                        animation:`fadeIn .2s ease ${idx*.025}s both`, alignItems:"center", cursor:"pointer" }}>
+                      <div onClick={e=>{ e.stopPropagation(); toggleSel(rowKey) }}
+                        style={{ width:15, height:15, borderRadius:3,
                           border:`1px solid ${selected.has(rowKey)?C.green:C.border2}`,
                           background:selected.has(rowKey)?C.green:"transparent",
-                          display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                          {selected.has(rowKey) && <span style={{ fontSize:9, color:"#000", fontWeight:900, lineHeight:1 }}>✓</span>}
-                        </div>
-                        <Badge text={a.confidence} color={confColor(a.confidence)} bg={confBg(a.confidence)}/>
-                        <div style={{ minWidth:0 }}>
-                          <div style={{ display:"flex", alignItems:"center", gap:5, overflow:"hidden" }}>
-                            <span style={{ fontSize:13, flexShrink:0 }}>{leagueIcon(a.league)}</span>
-                            <span style={{ fontSize:13, fontWeight:600, whiteSpace:"nowrap",
-                              overflow:"hidden", textOverflow:"ellipsis" }}>
-                              {a.home_team} <span style={{color:C.text2, fontWeight:400}}>vs</span> {a.away_team}
-                            </span>
-                          </div>
-                          <div style={{ fontSize:11, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginTop:2,
-                            display:"flex", alignItems:"center", gap:6 }}>
-                            <span>{a.league} · {a.kickoff} · λ {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}</span>
-                            {/* Indicadores de forma y H2H */}
-                            {a.form_home?.n_matches > 0 && (
-                              <span style={{ color: a.form_home.form_factor_att >= 1.05 ? C.green :
-                                a.form_home.form_factor_att <= 0.95 ? C.red : C.amber,
-                                fontSize:10, fontWeight:700 }}>
-                                {a.form_home.form_factor_att >= 1.05 ? "↑" : a.form_home.form_factor_att <= 0.95 ? "↓" : "→"}FORMA
-                              </span>
-                            )}
-                            {a.h2h?.n_matches >= 3 && (
-                              <span style={{ color:C.blue, fontSize:10, fontWeight:700 }}>
-                                H2H:{a.h2h.n_matches}
-                              </span>
-                            )}
-                            <span style={{ color:C.text2, fontSize:10 }}>
-                              {isExpanded ? "▲ ocultar" : "▼ detalle"}
-                            </span>
-                          </div>
-                        </div>
-                        <span style={{ fontSize:12, color:C.text1, overflow:"hidden",
-                          textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                          {a.market_label || a.market}
-                        </span>
-                        <span style={{ fontSize:14, fontWeight:700, color:C.text0,
-                          fontFamily:"'JetBrains Mono',monospace" }}>{a.odd?.toFixed(2)}</span>
-                        <span style={{ fontSize:13, color:C.blue, fontFamily:"'JetBrains Mono',monospace", fontWeight:600 }}>
-                          {(a.p_model*100).toFixed(1)}%
-                        </span>
-                        <span style={{ fontSize:14, fontWeight:700,
-                          color:a.edge_pct>=15?C.green:a.edge_pct>=8?C.amber:C.text1,
-                          fontFamily:"'JetBrains Mono',monospace" }}>+{a.edge_pct?.toFixed(1)}%</span>
-                        <span style={{ fontSize:13, fontWeight:700, color:C.green,
-                          fontFamily:"'JetBrains Mono',monospace" }}>${stake}</span>
-                        <span style={{ fontSize:12, color:C.text2,
-                          fontFamily:"'JetBrains Mono',monospace" }}>{(a.kelly_frac*100).toFixed(1)}%</span>
+                          display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, cursor:"pointer" }}>
+                        {selected.has(rowKey) && <span style={{ fontSize:9, color:"#000", fontWeight:900, lineHeight:1 }}>✓</span>}
                       </div>
+                      <Badge text={a.confidence} color={confColor(a.confidence)} bg={confBg(a.confidence)}/>
+                      <div style={{ minWidth:0 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:5, overflow:"hidden" }}>
+                          <span style={{ fontSize:13, flexShrink:0 }}>{leagueIcon(a.league)}</span>
+                          <span style={{ fontSize:13, fontWeight:600, whiteSpace:"nowrap",
+                            overflow:"hidden", textOverflow:"ellipsis" }}>
+                            {a.home_team} <span style={{color:C.text2, fontWeight:400}}>vs</span> {a.away_team}
+                          </span>
+                        </div>
+                        <div style={{ fontSize:11, color: isExp ? C.blue : C.text2,
+                          fontFamily:"'JetBrains Mono',monospace", marginTop:2 }}>
+                          {a.league} · {a.kickoff} · λ {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}
+                          {" "}<b>{isExp ? "▲ cerrar" : "▼ detalle"}</b>
+                        </div>
+                      </div>
+                      <span style={{ fontSize:12, color:C.text1, overflow:"hidden",
+                        textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                        {a.market_label || a.market}
+                      </span>
+                      <span style={{ fontSize:14, fontWeight:700, color:C.text0,
+                        fontFamily:"'JetBrains Mono',monospace" }}>{a.odd?.toFixed(2)}</span>
+                      <span style={{ fontSize:13, color:C.blue, fontFamily:"'JetBrains Mono',monospace", fontWeight:600 }}>
+                        {(a.p_model*100).toFixed(1)}%
+                      </span>
+                      <span style={{ fontSize:14, fontWeight:700,
+                        color:a.edge_pct>=15?C.green:a.edge_pct>=8?C.amber:C.text1,
+                        fontFamily:"'JetBrains Mono',monospace" }}>+{a.edge_pct?.toFixed(1)}%</span>
+                      <span style={{ fontSize:13, fontWeight:700, color:C.green,
+                        fontFamily:"'JetBrains Mono',monospace" }}>${stake}</span>
+                      <span style={{ fontSize:12, color:C.text2,
+                        fontFamily:"'JetBrains Mono',monospace" }}>{(a.kelly_frac*100).toFixed(1)}%</span>
                     </div>
                   )
                 })}

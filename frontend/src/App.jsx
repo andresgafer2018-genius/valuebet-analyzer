@@ -692,21 +692,11 @@ export default function App() {
             <Panel title="APUESTAS DE VALOR DETECTADAS — TIEMPO REAL">
               {/* Table header */}
               <div style={{ display:"grid",
-                gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px",
-                gap:8, padding:"8px 14px", borderBottom:`1px solid ${C.border}`, background:C.bg3 }}>
-                {[
-                  {h:"", tip:""},
-                  {h:"CONFIANZA", tip:"Nivel de confianza de la apuesta"},
-                  {h:"PARTIDO", tip:"Equipos y liga"},
-                  {h:"TIPO DE APUESTA", tip:"Mercado disponible"},
-                  {h:"CUOTA", tip:"Cuota actual de la casa"},
-                  {h:"PROB. MODELO", tip:"Probabilidad calculada por el modelo"},
-                  {h:"VENTAJA", tip:"Edge sobre la casa de apuestas"},
-                  {h:"APOSTAR", tip:"Monto sugerido según tu capital"},
-                  {h:"% CAP / INFO", tip:"% del bankroll · clic ▼ info para ver forma y H2H"},
-                ].map(({h, tip}, i) => (
-                  <span key={i} title={tip} style={{ fontSize:10, color:C.text2,
-                    fontFamily:"'JetBrains Mono',monospace", letterSpacing:".06em", cursor: tip ? "help" : "default" }}>{h}</span>
+                gridTemplateColumns:"20px 70px minmax(0,1fr) 100px 55px 65px 65px 60px 90px",
+                gap:6, padding:"8px 14px", borderBottom:`1px solid ${C.border}`, background:C.bg3 }}>
+                {["","CONFIANZA","PARTIDO","TIPO","CUOTA","P.MOD","EDGE","STAKE","% / INFO"].map((h,i)=>(
+                  <span key={i} style={{ fontSize:10, color:C.text2,
+                    fontFamily:"'JetBrains Mono',monospace", letterSpacing:".06em"}}>{h}</span>
                 ))}
               </div>
 
@@ -730,8 +720,8 @@ export default function App() {
                     <div key={rowKey} style={{ borderBottom:`1px solid ${C.border}` }}>
                       <div className="alert-row"
                         style={{ display:"grid",
-                          gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px",
-                          gap:8, padding:"10px 14px",
+                          gridTemplateColumns:"20px 70px minmax(0,1fr) 100px 55px 65px 65px 60px 90px",
+                          gap:6, padding:"10px 14px",
                           background: isExp ? C.bg3 : selected.has(rowKey) ? C.greenDim : "transparent",
                           borderLeft: selected.has(rowKey) ? `3px solid ${C.green}` : isExp ? `3px solid ${C.blue}` : "3px solid transparent",
                           animation:`fadeIn .2s ease ${idx*.025}s both`, alignItems:"center" }}>

@@ -750,18 +750,21 @@ export default function App() {
                   return (
                     <div key={rowKey}>
                       <div className="alert-row"
-                        onClick={() => { toggleSel(rowKey); setExpandedRow(isExpanded ? null : rowKey) }}
-                        title="Clic para seleccionar · ver forma y H2H"
+                        onClick={() => setExpandedRow(isExpanded ? null : rowKey)}
+                        title="Clic para ver forma y H2H"
                         style={{ display:"grid",
                           gridTemplateColumns:"24px 80px minmax(0,1fr) 110px 64px 70px 72px 70px 74px",
                           gap:8, padding:"10px 14px", borderBottom: isExpanded ? "none" : `1px solid ${C.border}`,
                           background:selected.has(rowKey)?C.greenDim:"transparent",
                           borderLeft:selected.has(rowKey)?`3px solid ${C.green}`:"3px solid transparent",
                           animation:`fadeIn .2s ease ${idx*.025}s both`, alignItems:"center" }}>
-                        <div style={{ width:15, height:15, borderRadius:3,
-                          border:`1px solid ${selected.has(rowKey)?C.green:C.border2}`,
-                          background:selected.has(rowKey)?C.green:"transparent",
-                          display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                        {/* Checkbox — clic independiente */}
+                        <div onClick={e => { e.stopPropagation(); toggleSel(rowKey) }}
+                          style={{ width:15, height:15, borderRadius:3,
+                            border:`1px solid ${selected.has(rowKey)?C.green:C.border2}`,
+                            background:selected.has(rowKey)?C.green:"transparent",
+                            display:"flex", alignItems:"center", justifyContent:"center",
+                            flexShrink:0, cursor:"pointer" }}>
                           {selected.has(rowKey) && <span style={{ fontSize:9, color:"#000", fontWeight:900, lineHeight:1 }}>✓</span>}
                         </div>
                         <Badge text={a.confidence} color={confColor(a.confidence)} bg={confBg(a.confidence)}/>

@@ -94,24 +94,107 @@ class DataFetcher:
         }).tail(n)
 
     def get_upcoming_matches(self):
+        """
+        Obtiene próximos partidos. Estrategia en cascada:
+          1. Partidos de hoy via API-Sports
+          2. Próximos 10 partidos por cada liga configurada (next=10)
+          3. Fallback simulado si la API falla o no hay key
+        """
+        matches = []
+
+        # ── Intentar API-Sports ────────────────────────────────────────────
+        if APISPORTS_KEY:
+            try:
+                # 1. Partidos de hoy
+                for f in get_fixtures_today()[:20]:
+                    m = self._fixture_to_match(f)
+                    if m:
+                        matches.append(m)
+            except Exception as e:
+                import logging; logging.getLogger(__name__).warning(f"[Fetcher] fixtures_today error: {e}")
+
+            # 2. Si no hay partidos hoy, buscar próximos por liga
+            if not matches:
+                for league_name, league_id in LEAGUE_IDS.items():
+                    try:
+                        fixtures = get_fixtures_league(league_id, season=2024)
+                        for f in fixtures[:5]:
+                            m = self._fixture_to_match(f)
+                            if m and m not in matches:
+                                matches.append(m)
+                    except Exception as e:
+                        import logging; logging.getLogger(__name__).warning(
+                            f"[Fetcher] fixtures_league {league_name} error: {e}"
+                        )
+
+        # ── Fallback simulado si no hay API key o no hay partidos ──────────
+        if not matches:
+            import logging
+            logging.getLogger(__name__).warning(
+                "[Fetcher] Sin partidos de API-Sports, usando partidos simulados"
+            )
+            matches = self._get_simulated_matches()
+
+        return matches
+
+    def _fixture_to_match(self, f: dict) -> dict | None:
+        """Convierte un fixture de API-Sports a formato interno."""
         try:
-            matches = []
-            for f in get_fixtures_today()[:20]:
-                home = f["teams"]["home"]["name"]
-                away = f["teams"]["away"]["name"]
-                matches.append({
-                    "home_team": home,
-                    "away_team": away,
-                    "match_id": home + "_" + away,
-                    "league": f["league"]["name"],
-                    "date": f["fixture"]["date"],
-                    "home_id": f["teams"]["home"]["id"],
-                    "away_id": f["teams"]["away"]["id"],
-                    "league_id": f["league"]["id"],
-                })
-            return matches
-        except:
-            return []
+            home = f["teams"]["home"]["name"]
+            away = f["teams"]["away"]["name"]
+            return {
+                "home_team":  home,
+                "away_team":  away,
+                "match_id":   f"{home}_{away}",
+                "league":     f["league"]["name"],
+                "kickoff":    f["fixture"]["date"],
+                "home_id":    f["teams"]["home"]["id"],
+                "away_id":    f["teams"]["away"]["id"],
+                "league_id":  f["league"]["id"],
+            }
+        except Exception:
+            return None
+
+    def _get_simulated_matches(self) -> list[dict]:
+        """
+        Genera partidos simulados representativos cuando no hay API disponible.
+        Cubre las principales ligas para que el sistema siempre tenga algo que analizar.
+        """
+        from datetime import datetime, timedelta
+        tomorrow = (datetime.utcnow() + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        simulated = [
+            # Premier League
+            ("Arsenal",        "Chelsea",          "Premier League"),
+            ("Manchester City", "Liverpool",        "Premier League"),
+            ("Tottenham",      "Manchester United", "Premier League"),
+            # La Liga
+            ("Real Madrid",    "Barcelona",         "La Liga"),
+            ("Atletico Madrid","Sevilla",            "La Liga"),
+            # Serie A
+            ("Juventus",       "Inter",             "Serie A"),
+            ("AC Milan",       "Napoli",            "Serie A"),
+            # Bundesliga
+            ("Bayern Munich",  "Borussia Dortmund", "Bundesliga"),
+            ("RB Leipzig",     "Bayer Leverkusen",  "Bundesliga"),
+            # Ligue 1
+            ("Paris Saint-Germain", "Marseille",    "Ligue 1"),
+            # Liga Argentina
+            ("Boca Juniors",   "River Plate",       "Liga Argentina"),
+            ("Racing Club",    "Independiente",     "Liga Argentina"),
+        ]
+
+        return [
+            {
+                "home_team": home,
+                "away_team": away,
+                "match_id":  f"{home}_{away}",
+                "league":    league,
+                "kickoff":   tomorrow,
+                "simulated": True,
+            }
+            for home, away, league in simulated
+        ]
 
     def get_simulated_odds(self, match):
         np.random.seed(hash(str(match)) % 2**32)

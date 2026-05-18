@@ -318,9 +318,12 @@ function FormH2HPanel({ alert, onClose }) {
   const fh  = alert.form_home || {}
   const fa  = alert.form_away || {}
   const h2h = alert.h2h || {}
+  const w   = alert.weather || {}
   const G = { green:"#00d4a0", amber:"#f5a623", red:"#e84040", blue:"#4d9cf5",
     bg1:"#0d0f16", bg2:"#12151f", bg3:"#181c28", border:"#1e2438", text0:"#e8ecf5", text2:"#505872" }
   const fc = v => v >= 1.05 ? G.green : v <= 0.95 ? G.red : G.amber
+  const wf = alert.weather_factor || 1.0
+  const wfColor = wf < 0.95 ? G.red : wf < 0.99 ? G.amber : G.green
 
   return (
     <div style={{ background:G.bg2, border:`1px solid ${G.blue}40`,
@@ -333,7 +336,7 @@ function FormH2HPanel({ alert, onClose }) {
         <button onClick={onClose} style={{ background:"none", border:"none",
           color:G.text2, cursor:"pointer", fontSize:14 }}>✕</button>
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:12 }}>
         {/* Forma Local */}
         <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
           <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
@@ -453,6 +456,56 @@ function FormH2HPanel({ alert, onClose }) {
                   </span>
                   <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
                     n={h2h.n_matches} partidos
+                  </span>
+                </div>
+              </div>
+          }
+        </div>
+        {/* Clima */}
+        <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
+          <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
+            letterSpacing:".08em", marginBottom:8 }}>🌤 CLIMA DEL PARTIDO</div>
+          {!w.available
+            ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                <span style={{ fontSize:11, color:G.text2 }}>Activando API...</span>
+                <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
+                  La key de OpenWeatherMap se activa en ~2hs.<br/>
+                  Factor actual: neutro (1.0)
+                </span>
+              </div>
+            : <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                  {w.icon && <img src={w.icon} alt={w.condition} style={{ width:28, height:28 }}/>}
+                  <span style={{ fontSize:12, color:G.text0, fontWeight:600 }}>{w.condition}</span>
+                </div>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    🌡 <b style={{color:G.text0}}>{w.temp_c}°C</b>
+                  </span>
+                  {w.wind_kph > 0 && (
+                    <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                      💨 <b style={{color:w.wind_kph>30?G.amber:G.text0}}>{w.wind_kph} km/h</b>
+                    </span>
+                  )}
+                  {w.rain_mm > 0 && (
+                    <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                      🌧 <b style={{color:G.blue}}>{w.rain_mm}mm</b>
+                    </span>
+                  )}
+                  {w.snow_mm > 0 && (
+                    <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                      ❄ <b style={{color:G.blue}}>{w.snow_mm}mm</b>
+                    </span>
+                  )}
+                </div>
+                <div style={{ marginTop:4, padding:"4px 8px", borderRadius:3,
+                  background: wf < 0.99 ? wfColor+"15" : G.bg1,
+                  border: `1px solid ${wfColor}30` }}>
+                  <span style={{ fontSize:10, color:G.text2 }}>
+                    Ajuste λ: <b style={{color:wfColor, fontFamily:"'JetBrains Mono',monospace"}}>
+                      {wf < 1 ? `${((wf-1)*100).toFixed(1)}%` : "neutro"}
+                    </b>
+                    {wf < 0.99 && <span style={{color:G.text2}}> goles esperados</span>}
                   </span>
                 </div>
               </div>

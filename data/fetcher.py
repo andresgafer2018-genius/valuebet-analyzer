@@ -55,13 +55,13 @@ def get_fixtures_today():
     r.raise_for_status()
     return r.json().get("response", [])
 
-def get_fixtures_league(league_id, season=2024):
+def get_fixtures_league(league_id, season=2025):
     r = requests.get(f"{APISPORTS_BASE}/fixtures", headers=_h(),
                      params={"league": league_id, "season": season, "next": 10}, timeout=15)
     r.raise_for_status()
     return r.json().get("response", [])
 
-def get_team_stats(team_id, league_id, season=2024):
+def get_team_stats(team_id, league_id, season=2025):
     r = requests.get(f"{APISPORTS_BASE}/teams/statistics", headers=_h(),
                      params={"team": team_id, "league": league_id, "season": season}, timeout=15)
     r.raise_for_status()
@@ -117,7 +117,7 @@ class DataFetcher:
             if not matches:
                 for league_name, league_id in LEAGUE_IDS.items():
                     try:
-                        fixtures = get_fixtures_league(league_id, season=2024)
+                        fixtures = get_fixtures_league(league_id, season=2025)
                         for f in fixtures[:5]:
                             m = self._fixture_to_match(f)
                             if m and m not in matches:

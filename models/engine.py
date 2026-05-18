@@ -374,6 +374,19 @@ class PoissonModel:
                 lambda_h *= (1.0 * (1 - h2h_weight) + h2h["h2h_bias_home"] * h2h_weight)
                 lambda_a *= (1.0 * (1 - h2h_weight) + h2h["h2h_bias_away"] * h2h_weight)
 
+        # ── Clima ───────────────────────────────────────────────────────────
+        weather_data = {"available": False}
+        weather_factor = 1.0
+        try:
+            from data.weather import get_weather_for_league, weather_lambda_factor
+            weather_data   = get_weather_for_league(league)
+            weather_factor = weather_lambda_factor(weather_data)
+            if weather_factor != 1.0:
+                lambda_h *= weather_factor
+                lambda_a *= weather_factor
+        except Exception:
+            pass  # Si falla el clima, continua sin ajuste
+
         # ── Score matrix (Dixon-Coles) ──────────────────────────────────────
         score_matrix = np.zeros((max_goals + 1, max_goals + 1))
         for i in range(max_goals + 1):
@@ -407,9 +420,11 @@ class PoissonModel:
             "lambda_away": round(lambda_a, 3),
             "rho":         round(self.rho, 4),
             # Variables adicionales (para UI y debugging)
-            "form_home":   form_home,
-            "form_away":   form_away,
-            "h2h":         h2h,
+            "form_home":     form_home,
+            "form_away":     form_away,
+            "h2h":           h2h,
+            "weather":       weather_data,
+            "weather_factor": round(weather_factor, 4),
         }
 
     def save(self):
@@ -647,6 +662,8 @@ class ValueBetDetector:
                     "form_home":    match.get("form_home", {}),
                     "form_away":    match.get("form_away", {}),
                     "h2h":          match.get("h2h", {}),
+                    "weather":      prediction.get("weather", {"available": False}),
+                    "weather_factor": prediction.get("weather_factor", 1.0),
                 })
 
         return sorted(alerts, key=lambda x: x["edge_pct"], reverse=True)

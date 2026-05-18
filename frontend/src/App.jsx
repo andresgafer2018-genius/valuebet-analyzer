@@ -339,7 +339,21 @@ function FormH2HPanel({ alert, onClose }) {
           <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
             letterSpacing:".08em", marginBottom:8 }}>LOCAL — {alert.home_team?.toUpperCase()}</div>
           {fh.n_matches === 0
-            ? <span style={{ fontSize:11, color:G.text2 }}>Sin historial (partidos simulados)</span>
+            ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                <span style={{ fontSize:11, color:G.text2 }}>Sin historial reciente disponible</span>
+                <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
+                  El modelo usa valores neutros (factor=1.0).<br/>
+                  Activá APISPORTS_KEY para obtener forma real.
+                </span>
+                <div style={{ display:"flex", gap:6, marginTop:2 }}>
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    λ local: <b style={{color:G.amber}}>{alert.lambda_home?.toFixed(2)}</b>
+                  </span>
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    λ visita: <b style={{color:G.amber}}>{alert.lambda_away?.toFixed(2)}</b>
+                  </span>
+                </div>
+              </div>
             : <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                   <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>⚽ Ataque</span>
@@ -368,7 +382,18 @@ function FormH2HPanel({ alert, onClose }) {
           <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
             letterSpacing:".08em", marginBottom:8 }}>VISITANTE — {alert.away_team?.toUpperCase()}</div>
           {fa.n_matches === 0
-            ? <span style={{ fontSize:11, color:G.text2 }}>Sin historial (partidos simulados)</span>
+            ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                <span style={{ fontSize:11, color:G.text2 }}>Sin historial reciente disponible</span>
+                <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
+                  El modelo usa valores neutros (factor=1.0).<br/>
+                  Activá APISPORTS_KEY para obtener forma real.
+                </span>
+                <div style={{ display:"flex", gap:6, marginTop:2 }}>
+                  <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
+                    λ visita: <b style={{color:G.amber}}>{alert.lambda_away?.toFixed(2)}</b>
+                  </span>
+                </div>
+              </div>
             : <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                   <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>⚽ Ataque</span>
@@ -397,7 +422,13 @@ function FormH2HPanel({ alert, onClose }) {
           <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
             letterSpacing:".08em", marginBottom:8 }}>H2H — HISTORIAL DIRECTO</div>
           {h2h.n_matches === 0
-            ? <span style={{ fontSize:11, color:G.text2 }}>Sin enfrentamientos directos en el historial</span>
+            ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                <span style={{ fontSize:11, color:G.text2 }}>Sin enfrentamientos directos en el historial</span>
+                <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
+                  Se asume bias neutro (50/50).<br/>
+                  Con APISPORTS_KEY se calcularán los H2H reales.
+                </span>
+              </div>
             : <div>
                 <div style={{ display:"flex", gap:4, height:40, alignItems:"flex-end", marginBottom:8 }}>
                   {[
@@ -694,9 +725,21 @@ export default function App() {
               <div style={{ display:"grid",
                 gridTemplateColumns:"20px 70px minmax(0,1fr) 100px 55px 65px 65px 60px 90px",
                 gap:6, padding:"8px 14px", borderBottom:`1px solid ${C.border}`, background:C.bg3 }}>
-                {["","CONFIANZA","PARTIDO","TIPO","CUOTA","P.MOD","EDGE","STAKE","% / INFO"].map((h,i)=>(
-                  <span key={i} style={{ fontSize:10, color:C.text2,
-                    fontFamily:"'JetBrains Mono',monospace", letterSpacing:".06em"}}>{h}</span>
+                {[
+                  { h:"",          tip:"" },
+                  { h:"CONFIANZA", tip:"Nivel de confianza: ALTA (edge ≥10%), MEDIA (5-10%), BAJA (3-5%)" },
+                  { h:"PARTIDO",   tip:"Equipos, liga y hora del partido. λ = goles esperados según el modelo" },
+                  { h:"TIPO",      tip:"Mercado: 1X2 Local/Empate/Visitante o Over/Under 2.5 goles" },
+                  { h:"CUOTA",     tip:"Cuota ofrecida por la casa de apuestas. Mayor cuota = mayor pago potencial" },
+                  { h:"P.MOD",     tip:"Probabilidad calculada por nuestro modelo (Poisson + Regresión Logística)" },
+                  { h:"EDGE",      tip:"Ventaja matemática sobre la casa. Edge = P.Modelo - P.Implícita en cuota" },
+                  { h:"STAKE",     tip:"Monto sugerido a apostar en $ según tu bankroll y el criterio de Kelly" },
+                  { h:"% / INFO",  tip:"% del bankroll total sugerido por Kelly. Clic en ▼info para ver forma reciente y H2H" },
+                ].map(({h,tip},i)=>(
+                  <span key={i} title={tip} style={{ fontSize:10, color:C.text2,
+                    fontFamily:"'JetBrains Mono',monospace", letterSpacing:".06em",
+                    cursor: tip ? "help" : "default",
+                    borderBottom: tip ? `1px dotted ${C.text2}40` : "none" }}>{h}</span>
                 ))}
               </div>
 
@@ -741,8 +784,12 @@ export default function App() {
                               {a.home_team} <span style={{color:C.text2, fontWeight:400}}>vs</span> {a.away_team}
                             </span>
                           </div>
-                          <div style={{ fontSize:11, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginTop:2 }}>
+                          <div style={{ fontSize:11, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginTop:2, display:"flex", alignItems:"center", gap:6 }}>
                             {a.league} · {a.kickoff} · λ {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}
+                            {a.bookmaker === "simulated"
+                              ? <span title="Cuotas simuladas — partidos reales con cuotas generadas por el modelo" style={{ fontSize:9, color:C.amber, border:`1px solid ${C.amber}40`, borderRadius:2, padding:"0 4px" }}>SIM</span>
+                              : <span title="Datos reales de bookmaker" style={{ fontSize:9, color:C.green, border:`1px solid ${C.green}40`, borderRadius:2, padding:"0 4px" }}>REAL</span>
+                            }
                           </div>
                         </div>
                         <span style={{ fontSize:12, color:C.text1, overflow:"hidden",
@@ -964,7 +1011,7 @@ export default function App() {
                   {[
                     { name:"Datos históricos de partidos", status:"✓ Activo",    color:C.green,  detail:"Datos sintéticos generados con distribución Poisson" },
                     { name:"The Odds API (cuotas reales)", status:"○ Pendiente", color:C.text2,  detail:"500 solicitudes/mes en plan gratuito"   },
-                    { name:"API-Football (estadísticas)",  status:"○ Pendiente", color:C.text2,  detail:"100 solicitudes/día en plan gratuito"   },
+                    { name:"API-Football (estadísticas)",  status:"✓ Activo",  color:C.green,  detail:"100 solicitudes/día — partidos reales conectados"   },
                     { name:"OpenWeatherMap (clima)",       status:"○ Pendiente", color:C.text2,  detail:"1000 solicitudes/día en plan gratuito"  },
                   ].map(s => (
                     <div key={s.name} style={{ display:"flex", alignItems:"center",

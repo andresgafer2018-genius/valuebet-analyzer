@@ -124,3 +124,36 @@ def get_alerts_history(limit=100):
             return [dict(r) for r in cur.fetchall()]
     finally:
         conn.close()
+
+
+def update_bet_result(bet_id, result):
+    """Actualiza resultado de una apuesta (win/loss/void) y calcula profit."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT odds, amount_bet FROM bets WHERE id = %s", (bet_id,))
+            row = cur.fetchone()
+            if not row:
+                return {"error": "bet not found"}
+            if result == 'win':
+                profit = round(row['amount_bet'] * (row['odds'] - 1), 2)
+            elif result == 'loss':
+                profit = -round(row['amount_bet'], 2)
+            else:
+                profit = 0
+            cur.execute("UPDATE bets SET result = %s, profit = %s WHERE id = %s", (result, profit, bet_id))
+        conn.commit()
+        return {"status": "updated", "profit": profit}
+    finally:
+        conn.close()
+
+def delete_bet(bet_id):
+    """Elimina una apuesta."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM bets WHERE id = %s", (bet_id,))
+        conn.commit()
+        return {"status": "deleted"}
+    finally:
+        conn.close()

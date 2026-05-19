@@ -128,3 +128,17 @@ def update_retrain_status_db(last_retrain=None, last_error=None,
         conn.close()
     except Exception as e:
         log.warning(f'[DB] No se pudo actualizar retrain_status: {e}')
+
+
+# -- BETS HISTORY ------------------------------------------------------------
+
+def save_bet(home_team, away_team, league, bet_type, odds, edge, kelly_stake, amount_bet, match_date=None):
+    """Guarda una apuesta en la base de datos."""
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO bets (home_team, away_team, league, bet_type, odds, edge, kelly_stake, amount_bet, result, profit, match_date)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'pending', 0, %s)
+                RETURNING id
+            """, (home_team, away_team, league, bet_type, odds, edge, kelly_stake, amount_bet, match_date))

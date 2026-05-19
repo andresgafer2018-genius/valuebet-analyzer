@@ -21,7 +21,7 @@ from data.fetcher import DataFetcher
 from models.engine import PoissonModel, LogisticModel, ValueBetDetector, ArbitrageDetector, ProbabilityCalibrator
 from database.db import init_db
 from models.retrain import run_retrain_async, get_retrain_status
-from database.models import get_bankroll, update_bankroll, save_alerts, get_alerts_history, get_bets, get_bet_stats, save_bet, resolve_bet
+from database.models import get_bankroll, update_bankroll, save_alerts, get_alerts_history, get_bets, get_bet_stats, save_bet, resolve_bet, update_bet_result, delete_bet
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -358,3 +358,62 @@ def alerts_history():
             if hasattr(v, 'isoformat'):
                 h[k] = v.isoformat()
     return jsonify({'alerts': history})
+
+# -- BETS HISTORY ENDPOINTS --------------------------------------------------
+
+
+@app.route('/api/bets', methods=['GET'])
+def list_bets():
+    result_filter = request.args.get('result', None)
+    limit = int(request.args.get('limit', 100))
+    bets = get_bets(limit=limit, result_filter=result_filter)
+    # Serializar fechas
+    for b in bets:
+        for k, v in b.items():
+            if hasattr(v, 'isoformat'):
+                b[k] = v.isoformat()
+    return jsonify(bets)
+
+@app.route('/api/bets', methods=['POST'])
+def create_bet():
+    data = request.get_json()
+    result = save_bet(
+        home_team   = data.get('home_team'),
+        away_team   = data.get('away_team'),
+        league      = data.get('league'),
+        bet_type    = data.get('bet_type'),
+        odds        = data.get('odds'),
+        edge        = data.get('edge'),
+        kelly_stake = data.get('kelly_stake'),
+        amount_bet  = data.get('amount_bet'),
+        match_date  = data.get('match_date'),
+    )
+    return jsonify(result)
+
+@app.route('/api/bets/<int:bet_id>', methods=['PUT'])
+def update_bet(bet_id):
+    data = request.get_json()
+    result = update_bet_result(
+        bet_id = bet_id,
+        result = data.get('result'),
+        profit = data.get('profit', None),
+    )
+    return jsonify(result)
+
+@app.route('/api/bets/<int:bet_id>', methods=['DELETE'])
+def remove_bet(bet_id):
+    result = delete_bet(bet_id)
+    return jsonify(result)
+
+@app.route('/api/bets/stats', methods=['GET'])
+def bets_stats():
+    return jsonify(get_bet_stats())
+
+@app.route('/api/bankroll', methods=['GET'])
+def get_bankroll_endpoint():
+    return jsonify({"amount": get_bankroll()})
+
+@app.route('/api/bankroll', methods=['PUT'])
+def update_bankroll_endpoint():
+    data = request.get_json()
+    return jsonify(update_bankroll(data.get('amount')))

@@ -873,6 +873,7 @@ export default function App() {
                               fontFamily:"'JetBrains Mono',monospace" }}>
                             {isExp?"▲ cerrar":"▼ info"}
                           </button>
+              <button onClick={(e)=>{e.stopPropagation();fetch(`${API}/api/bets`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({home_team:a.home_team,away_team:a.away_team,league:a.league,bet_type:a.market,odds:a.odd,edge:a.edge_pct/100,kelly_stake:a.kelly_frac,amount_bet:a.stake,match_date:a.kickoff})}).then(()=>alert("Apuesta guardada"))}} style={{background:"#00d4a018",border:"1px solid #00d4a044",color:"#00d4a0",borderRadius:3,padding:"1px 6px",fontSize:10,cursor:"pointer",marginTop:2,fontFamily:"JetBrains Mono,monospace"}}>+ guardar</button>
                         </div>
                       </div>
                     </div>

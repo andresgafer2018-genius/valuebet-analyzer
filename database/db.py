@@ -130,15 +130,124 @@ def update_retrain_status_db(last_retrain=None, last_error=None,
         log.warning(f'[DB] No se pudo actualizar retrain_status: {e}')
 
 
-# -- BETS HISTORY ------------------------------------------------------------
+# ── Funciones para bets ────────────────────────────────────────────────────
 
 def save_bet(home_team, away_team, league, bet_type, odds, edge, kelly_stake, amount_bet, match_date=None):
-    """Guarda una apuesta en la base de datos."""
+    """Guarda una nueva apuesta en PostgreSQL."""
     try:
         conn = get_connection()
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO bets (home_team, away_team, league, bet_type, odds, edge, kelly_stake, amount_bet, result, profit, match_date)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'pending', 0, %s)
+                INSERT INTO bets (home_team, away_team, league, bet_type, odds, edge, kelly_stake, amount_bet, match_date)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (home_team, away_team, league, bet_type, odds, edge, kelly_stake, amount_bet, match_date))
+            row = cur.fetchone()
+        conn.commit()
+        conn.close()
+        return row["id"] if row else None
+    except Exception as e:
+        log.error(f'[DB] Error guardando apuesta: {e}')
+        return None
+
+
+def get_bets(limit=100):
+    """Obtiene las apuestas más recientes."""
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT * FROM bets ORDER BY created_at DESC LIMIT %s
+            """, (limit,))
+            rows = cur.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+    except Exception as e:
+        log.error(f'[DB] Error obteniendo apuestas: {e}')
+        return []
+
+
+def update_bet_result(bet_id, result, profit):
+    """Actualiza el resultado de una apuesta."""
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE bets SET result = %s, profit = %s WHERE id = %s
+            """, (result, profit, bet_id))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        log.error(f'[DB] Error actualizando resultado: {e}')
+        return False
+
+
+def delete_bet(bet_id):
+    """Elimina una apuesta."""
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM bets WHERE id = %s", (bet_id,))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        log.error(f'[DB] Error eliminando apuesta: {e}')
+        return False
+
+
+def get_bet_stats():
+    """Obtiene estadísticas generales de apuestas."""
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    COUNT(*) as total,
+                    COUNT(*) FILTER (WHERE result = 'won') as won,
+                    COUNT(*) FILTER (WHERE result = 'lost') as lost,
+                    COUNT(*) FILTER (WHERE result = 'pending') as pending,
+                    COALESCE(SUM(profit), 0) as total_profit,
+                    COALESCE(SUM(amount_bet), 0) as total_staked
+                FROM bets
+            """)
+            row = cur.fetchone()
+        conn.close()
+        return dict(row) if row else {}
+    except Exception as e:
+        log.error(f'[DB] Error obteniendo stats: {e}')
+        return {}
+
+
+# ── Funciones para bankroll ────────────────────────────────────────────────
+
+def get_bankroll():
+    """Obtiene el bankroll actual."""
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT amount FROM bankroll ORDER BY id LIMIT 1")
+            row = cur.fetchone()
+        conn.close()
+        return float(row["amount"]) if row else 1000.0
+    except Exception as e:
+        log.error(f'[DB] Error obteniendo bankroll: {e}')
+        return 1000.0
+
+
+def update_bankroll(amount):
+    """Actualiza el bankroll."""
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE bankroll SET amount = %s, updated_at = NOW()
+                WHERE id = (SELECT id FROM bankroll LIMIT 1)
+            """, (amount,))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        log.error(f'[DB] Error actualizando bankroll: {e}')
+        return False

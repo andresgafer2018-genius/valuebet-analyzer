@@ -82,7 +82,7 @@ export default function BetsTracker() {
       const betsData  = await betsRes.json();
       const statsData = await statsRes.json();
       const brData    = await brRes.json();
-      setBets(Array.isArray(betsData) ? betsData : []);
+      setBets(Array.isArray(betsData) ? betsData : (betsData.bets || []));
       setStats(statsData);
       setBankroll(brData.amount ?? 1000);
       setNewBankroll(brData.amount ?? 1000);

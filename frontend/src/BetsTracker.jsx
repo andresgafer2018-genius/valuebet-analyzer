@@ -17,19 +17,19 @@ const C = {
 };
 
 const fmt = (n, dec = 2) =>
-  n == null ? "â€”" : Number(n).toFixed(dec);
+  n == null ? "-" : Number(n).toFixed(dec);
 
 const fmtDate = (iso) => {
-  if (!iso) return "â€”";
+  if (!iso) return "-";
   const d = new Date(iso);
   return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "2-digit" });
 };
 
 const RESULT_CONFIG = {
-  pending: { label: "Pendiente", color: C.amber,   bg: C.amberDim, icon: "â³" },
-  win:     { label: "Ganada",    color: C.green,   bg: C.greenDim, icon: "âœ“"  },
-  loss:    { label: "Perdida",   color: C.red,     bg: C.redDim,   icon: "âœ—"  },
-  void:    { label: "Anulada",   color: C.text2,   bg: "#ffffff08", icon: "â—‹"  },
+ pending: { label: "Pendiente", color: C.amber,   bg: C.amberDim, icon: "⏳" },
+  win:     { label: "Ganada",    color: C.green,   bg: C.greenDim, icon: "✓"  },
+  loss:    { label: "Perdida",   color: C.red,     bg: C.redDim,   icon: "✗"  },
+  void:    { label: "Anulada",   color: C.text2,   bg: "#ffffff08", icon: "○"  },
 };
 
 const Badge = ({ result }) => {
@@ -130,7 +130,7 @@ export default function BetsTracker() {
 
   const handleUpdateBankroll = async () => {
     const amount = parseFloat(newBankroll);
-    if (isNaN(amount) || amount <= 0) return showMsg("Monto invÃ¡lido", "error");
+    if (isNaN(amount) || amount <= 0) return showMsg("Monto invalido", "error");
     try {
       await fetch(`${API}/api/bankroll`, {
         method: "PUT",
@@ -176,7 +176,7 @@ export default function BetsTracker() {
             ðŸ“‹ Historial de Apuestas
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: C.text2 }}>
-            RegistrÃ¡ y seguÃ­ el resultado de tus apuestas en tiempo real
+            Registra y segui el resultado de tus apuestas en tiempo real
           </p>
         </div>
 
@@ -212,7 +212,7 @@ export default function BetsTracker() {
             ) : (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 18, fontWeight: 700, color: C.text0 }}>
-                  ${bankroll != null ? bankroll.toLocaleString("es-AR") : "â€”"}
+                  ${bankroll != null ? bankroll.toLocaleString("es-AR") : "-"}
                 </span>
                 <button onClick={() => setEditingBankroll(true)} style={{
                   background: "transparent", border: "none", color: C.text2,
@@ -271,7 +271,7 @@ export default function BetsTracker() {
           background: "transparent", border: `1px solid ${C.border}`,
           color: C.text1, fontSize: 12, cursor: "pointer",
         }}>
-          â†» Actualizar
+          ↻ Actualizar
         </button>
       </div>
 
@@ -286,7 +286,7 @@ export default function BetsTracker() {
           <div style={{ fontSize: 32, marginBottom: 10 }}>ðŸ“­</div>
           <div style={{ fontSize: 14 }}>No hay apuestas registradas</div>
           <div style={{ fontSize: 12, marginTop: 4 }}>
-            Las apuestas se guardan automÃ¡ticamente cuando usÃ¡s el botÃ³n "Registrar apuesta" en el panel principal
+            Las apuestas se guardan automaticamente cuando usas el boton "Registrar apuesta" en el panel principal
           </div>
         </div>
       ) : (
@@ -333,7 +333,7 @@ export default function BetsTracker() {
                   <td style={{ padding: "10px 10px", fontWeight: 600,
                     color: bet.profit > 0 ? C.green : bet.profit < 0 ? C.red : C.text2
                   }}>
-                    {bet.result === "pending" ? "â€”" : `${bet.profit >= 0 ? "+" : ""}$${fmt(bet.profit)}`}
+                    {bet.result === "pending" ? "-" : `${bet.profit >= 0 ? "+" : ""}$${fmt(bet.profit)}`}
                   </td>
                   <td style={{ padding: "10px 10px", color: C.text2, fontSize: 12 }}>{fmtDate(bet.created_at)}</td>
                   <td style={{ padding: "10px 10px" }}>

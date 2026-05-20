@@ -25,8 +25,8 @@ const C = {
 const confColor = c => c==="ALTA" ? C.green : c==="MEDIA" ? C.amber : C.text1
 const confBg    = c => c==="ALTA" ? C.greenDim : c==="MEDIA" ? C.amberDim : "transparent"
 const leagueIcon = l =>
-  l.includes("La Liga") ? "ðŸ" : l.includes("Premier") ? "ðŸ´ó §ó ¢ó ¥ó ®ó §ó ¿" :
-  l.includes("Arg") ? "ðŸ" : l.includes("Champ") ? "â­" : "âš½"
+  l.includes("La Liga") ? "" : l.includes("Premier") ? "" :
+  l.includes("Arg") ? "" : l.includes("Champ") ? "" : ""
 
 function genBankrollCurve(currentBalance, days = 60) {
   let bal = currentBalance * 0.92, data = []
@@ -765,7 +765,7 @@ export default function App() {
                   background:C.greenDim, border:`1px solid ${C.green}30`,
                   borderRadius:4, padding:"5px 12px", marginLeft:"auto" }}>
                   <span style={{ fontSize:12, color:C.green }}>
-                    {selected.size} apuesta{selected.size>1?"s":""} seleccionada{selected.size>1?"s":""} Â· Total a apostar: ${totalStake}
+                    {selected.size} apuesta{selected.size>1?"s":""} seleccionada{selected.size>1?"s":""} · Total a apostar: ${totalStake}
                   </span>
                   <button onClick={()=>setSelected(new Set())}
                     style={{ background:"none", border:"none", color:C.green, cursor:"pointer", fontSize:14 }}>âœ</button>
@@ -842,7 +842,7 @@ export default function App() {
                             </span>
                           </div>
                           <div style={{ fontSize:11, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginTop:2, display:"flex", alignItems:"center", gap:6 }}>
-                            {a.league} Â· {a.kickoff} Â· Î» {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}
+                            {a.league} · {a.kickoff} · Î» {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}
                             {a.bookmaker === "simulated"
                               ? <span title="Cuotas simuladas - partidos reales con cuotas generadas por el modelo" style={{ fontSize:9, color:C.amber, border:`1px solid ${C.amber}40`, borderRadius:2, padding:"0 4px" }}>SIM</span>
                               : <span title="Datos reales de bookmaker" style={{ fontSize:9, color:C.green, border:`1px solid ${C.green}40`, borderRadius:2, padding:"0 4px" }}>REAL</span>
@@ -893,7 +893,7 @@ export default function App() {
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
                 padding:"9px 14px", borderTop:`1px solid ${C.border}`, background:C.bg3 }}>
                 <span style={{ fontSize:11, color:C.text2 }}>
-                  Modelos: Poisson + Regresion Logistica (60/40) Â· Kelly fraccionado al 50% Â· Ventaja minima 3%
+                  Modelos: Poisson + Regresion Logistica (60/40) · Kelly fraccionado al 50% · Ventaja minima 3%
                 </span>
                 <button className="btn green">âš¡ Notificar por Telegram</button>
               </div>

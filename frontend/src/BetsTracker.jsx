@@ -26,10 +26,10 @@ const fmtDate = (iso) => {
 };
 
 const RESULT_CONFIG = {
- pending: { label: "Pendiente", color: C.amber,   bg: C.amberDim, icon: "⏳" },
-  win:     { label: "Ganada",    color: C.green,   bg: C.greenDim, icon: "✓"  },
-  loss:    { label: "Perdida",   color: C.red,     bg: C.redDim,   icon: "✗"  },
-  void:    { label: "Anulada",   color: C.text2,   bg: "#ffffff08", icon: "○"  },
+ pending: { label: "Pendiente", color: C.amber,   bg: C.amberDim, icon: "" },
+  win:     { label: "Ganada",    color: C.green,   bg: C.greenDim, icon: ""  },
+  loss:    { label: "Perdida",   color: C.red,     bg: C.redDim,   icon: ""  },
+  void:    { label: "Anulada",   color: C.text2,   bg: "#ffffff08", icon: ""  },
 };
 
 const Badge = ({ result }) => {
@@ -173,7 +173,7 @@ export default function BetsTracker() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: C.green, display: "flex", alignItems: "center", gap: 8 }}>
-            ðŸ“‹ Historial de Apuestas
+            ðŸ Historial de Apuestas
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: C.text2 }}>
             Registra y segui el resultado de tus apuestas en tiempo real
@@ -207,7 +207,7 @@ export default function BetsTracker() {
                 <button onClick={() => setEditingBankroll(false)} style={{
                   padding: "3px 8px", borderRadius: 5, border: `1px solid ${C.border2}`,
                   background: "transparent", color: C.text1, fontSize: 12, cursor: "pointer",
-                }}>âœ•</button>
+                }}>âœ</button>
               </div>
             ) : (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -271,7 +271,7 @@ export default function BetsTracker() {
           background: "transparent", border: `1px solid ${C.border}`,
           color: C.text1, fontSize: 12, cursor: "pointer",
         }}>
-          ↻ Actualizar
+           Actualizar
         </button>
       </div>
 
@@ -283,7 +283,7 @@ export default function BetsTracker() {
           textAlign: "center", color: C.text2, padding: 50,
           border: `1px dashed ${C.border}`, borderRadius: 10,
         }}>
-          <div style={{ fontSize: 32, marginBottom: 10 }}>ðŸ“­</div>
+          <div style={{ fontSize: 32, marginBottom: 10 }}>ðŸ­</div>
           <div style={{ fontSize: 14 }}>No hay apuestas registradas</div>
           <div style={{ fontSize: 12, marginTop: 4 }}>
             Las apuestas se guardan automaticamente cuando usas el boton "Registrar apuesta" en el panel principal
@@ -353,7 +353,7 @@ export default function BetsTracker() {
                           padding: "3px 6px", borderRadius: 4,
                           background: "transparent", border: `1px solid ${C.border}`,
                           color: C.text2, fontSize: 11, cursor: "pointer",
-                        }}>âœ•</button>
+                        }}>âœ</button>
                       </div>
                     ) : (
                       <Badge result={bet.result} />
@@ -372,7 +372,7 @@ export default function BetsTracker() {
                         padding: "4px 8px", borderRadius: 5,
                         background: C.redDim, border: `1px solid ${C.red}33`,
                         color: C.red, fontSize: 11, cursor: "pointer",
-                      }} title="Eliminar">ðŸ—‘</button>
+                      }} title="Eliminar">ðŸ</button>
                     </div>
                   </td>
                 </tr>

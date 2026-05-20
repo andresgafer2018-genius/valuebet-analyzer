@@ -17,19 +17,19 @@ const C = {
 };
 
 const fmt = (n, dec = 2) =>
-  n == null ? "—" : Number(n).toFixed(dec);
+  n == null ? "â€”" : Number(n).toFixed(dec);
 
 const fmtDate = (iso) => {
-  if (!iso) return "—";
+  if (!iso) return "â€”";
   const d = new Date(iso);
   return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "2-digit" });
 };
 
 const RESULT_CONFIG = {
-  pending: { label: "Pendiente", color: C.amber,   bg: C.amberDim, icon: "⏳" },
-  win:     { label: "Ganada",    color: C.green,   bg: C.greenDim, icon: "✓"  },
-  loss:    { label: "Perdida",   color: C.red,     bg: C.redDim,   icon: "✗"  },
-  void:    { label: "Anulada",   color: C.text2,   bg: "#ffffff08", icon: "○"  },
+  pending: { label: "Pendiente", color: C.amber,   bg: C.amberDim, icon: "â³" },
+  win:     { label: "Ganada",    color: C.green,   bg: C.greenDim, icon: "âœ“"  },
+  loss:    { label: "Perdida",   color: C.red,     bg: C.redDim,   icon: "âœ—"  },
+  void:    { label: "Anulada",   color: C.text2,   bg: "#ffffff08", icon: "â—‹"  },
 };
 
 const Badge = ({ result }) => {
@@ -76,7 +76,7 @@ export default function BetsTracker() {
     try {
       const [betsRes, statsRes, brRes] = await Promise.all([
         fetch(`${API}/api/bets?limit=200`),
-        fetch(`${API}/api/bets/stats`),
+        fetch(`${API}/api/stats`),
         fetch(`${API}/api/bankroll`),
       ]);
       const betsData  = await betsRes.json();
@@ -118,7 +118,7 @@ export default function BetsTracker() {
   };
 
   const handleDelete = async (bet_id) => {
-    if (!confirm("¿Eliminar esta apuesta?")) return;
+    if (!confirm("Â¿Eliminar esta apuesta?")) return;
     try {
       await fetch(`${API}/api/bets/${bet_id}`, { method: "DELETE" });
       showMsg("Apuesta eliminada");
@@ -130,7 +130,7 @@ export default function BetsTracker() {
 
   const handleUpdateBankroll = async () => {
     const amount = parseFloat(newBankroll);
-    if (isNaN(amount) || amount <= 0) return showMsg("Monto inválido", "error");
+    if (isNaN(amount) || amount <= 0) return showMsg("Monto invÃ¡lido", "error");
     try {
       await fetch(`${API}/api/bankroll`, {
         method: "PUT",
@@ -173,10 +173,10 @@ export default function BetsTracker() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: C.green, display: "flex", alignItems: "center", gap: 8 }}>
-            📋 Historial de Apuestas
+            ðŸ“‹ Historial de Apuestas
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: C.text2 }}>
-            Registrá y seguí el resultado de tus apuestas en tiempo real
+            RegistrÃ¡ y seguÃ­ el resultado de tus apuestas en tiempo real
           </p>
         </div>
 
@@ -207,17 +207,17 @@ export default function BetsTracker() {
                 <button onClick={() => setEditingBankroll(false)} style={{
                   padding: "3px 8px", borderRadius: 5, border: `1px solid ${C.border2}`,
                   background: "transparent", color: C.text1, fontSize: 12, cursor: "pointer",
-                }}>✕</button>
+                }}>âœ•</button>
               </div>
             ) : (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 18, fontWeight: 700, color: C.text0 }}>
-                  ${bankroll != null ? bankroll.toLocaleString("es-AR") : "—"}
+                  ${bankroll != null ? bankroll.toLocaleString("es-AR") : "â€”"}
                 </span>
                 <button onClick={() => setEditingBankroll(true)} style={{
                   background: "transparent", border: "none", color: C.text2,
                   cursor: "pointer", fontSize: 13, padding: 0,
-                }} title="Editar bankroll">✏️</button>
+                }} title="Editar bankroll">âœï¸</button>
               </div>
             )}
           </div>
@@ -271,7 +271,7 @@ export default function BetsTracker() {
           background: "transparent", border: `1px solid ${C.border}`,
           color: C.text1, fontSize: 12, cursor: "pointer",
         }}>
-          ↻ Actualizar
+          â†» Actualizar
         </button>
       </div>
 
@@ -283,10 +283,10 @@ export default function BetsTracker() {
           textAlign: "center", color: C.text2, padding: 50,
           border: `1px dashed ${C.border}`, borderRadius: 10,
         }}>
-          <div style={{ fontSize: 32, marginBottom: 10 }}>📭</div>
+          <div style={{ fontSize: 32, marginBottom: 10 }}>ðŸ“­</div>
           <div style={{ fontSize: 14 }}>No hay apuestas registradas</div>
           <div style={{ fontSize: 12, marginTop: 4 }}>
-            Las apuestas se guardan automáticamente cuando usás el botón "Registrar apuesta" en el panel principal
+            Las apuestas se guardan automÃ¡ticamente cuando usÃ¡s el botÃ³n "Registrar apuesta" en el panel principal
           </div>
         </div>
       ) : (
@@ -333,7 +333,7 @@ export default function BetsTracker() {
                   <td style={{ padding: "10px 10px", fontWeight: 600,
                     color: bet.profit > 0 ? C.green : bet.profit < 0 ? C.red : C.text2
                   }}>
-                    {bet.result === "pending" ? "—" : `${bet.profit >= 0 ? "+" : ""}$${fmt(bet.profit)}`}
+                    {bet.result === "pending" ? "â€”" : `${bet.profit >= 0 ? "+" : ""}$${fmt(bet.profit)}`}
                   </td>
                   <td style={{ padding: "10px 10px", color: C.text2, fontSize: 12 }}>{fmtDate(bet.created_at)}</td>
                   <td style={{ padding: "10px 10px" }}>
@@ -353,7 +353,7 @@ export default function BetsTracker() {
                           padding: "3px 6px", borderRadius: 4,
                           background: "transparent", border: `1px solid ${C.border}`,
                           color: C.text2, fontSize: 11, cursor: "pointer",
-                        }}>✕</button>
+                        }}>âœ•</button>
                       </div>
                     ) : (
                       <Badge result={bet.result} />
@@ -366,13 +366,13 @@ export default function BetsTracker() {
                           padding: "4px 8px", borderRadius: 5,
                           background: C.amberDim, border: `1px solid ${C.amber}33`,
                           color: C.amber, fontSize: 11, cursor: "pointer",
-                        }} title="Marcar resultado">✎</button>
+                        }} title="Marcar resultado">âœŽ</button>
                       )}
                       <button onClick={() => handleDelete(bet.id)} style={{
                         padding: "4px 8px", borderRadius: 5,
                         background: C.redDim, border: `1px solid ${C.red}33`,
                         color: C.red, fontSize: 11, cursor: "pointer",
-                      }} title="Eliminar">🗑</button>
+                      }} title="Eliminar">ðŸ—‘</button>
                     </div>
                   </td>
                 </tr>

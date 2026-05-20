@@ -353,10 +353,10 @@ function FormH2HPanel({ alert, onClose }) {
                 </span>
                 <div style={{ display:"flex", gap:6, marginTop:2 }}>
                   <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
-                    Î» local: <b style={{color:G.amber}}>{alert.lambda_home?.toFixed(2)}</b>
+                    x local: <b style={{color:G.amber}}>{alert.lambda_home?.toFixed(2)}</b>
                   </span>
                   <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
-                    Î» visita: <b style={{color:G.amber}}>{alert.lambda_away?.toFixed(2)}</b>
+                    x visita: <b style={{color:G.amber}}>{alert.lambda_away?.toFixed(2)}</b>
                   </span>
                 </div>
               </div>
@@ -396,7 +396,7 @@ function FormH2HPanel({ alert, onClose }) {
                 </span>
                 <div style={{ display:"flex", gap:6, marginTop:2 }}>
                   <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
-                    Î» visita: <b style={{color:G.amber}}>{alert.lambda_away?.toFixed(2)}</b>
+                    x visita: <b style={{color:G.amber}}>{alert.lambda_away?.toFixed(2)}</b>
                   </span>
                 </div>
               </div>
@@ -505,7 +505,7 @@ function FormH2HPanel({ alert, onClose }) {
                   background: wf < 0.99 ? wfColor+"15" : G.bg1,
                   border: `1px solid ${wfColor}30` }}>
                   <span style={{ fontSize:10, color:G.text2 }}>
-                    Ajuste Î»: <b style={{color:wfColor, fontFamily:"'JetBrains Mono',monospace"}}>
+                    Ajuste x: <b style={{color:wfColor, fontFamily:"'JetBrains Mono',monospace"}}>
                       {wf < 1 ? `${((wf-1)*100).toFixed(1)}%` : "neutro"}
                     </b>
                     {wf < 0.99 && <span style={{color:G.text2}}> goles esperados</span>}
@@ -785,7 +785,7 @@ export default function App() {
                 {[
                   { h:"",          tip:"" },
                   { h:"CONFIANZA", tip:"Nivel de confianza: ALTA (edge â10%), MEDIA (5-10%), BAJA (3-5%)" },
-                  { h:"PARTIDO",   tip:"Equipos, liga y hora del partido. Î» = goles esperados segun el modelo" },
+                  { h:"PARTIDO",   tip:"Equipos, liga y hora del partido. x = goles esperados segun el modelo" },
                   { h:"TIPO",      tip:"Mercado: 1X2 Local/Empate/Visitante o Over/Under 2.5 goles" },
                   { h:"CUOTA",     tip:"Cuota ofrecida por la casa de apuestas. Mayor cuota = mayor pago potencial" },
                   { h:"P.MOD",     tip:"Probabilidad calculada por nuestro modelo (Poisson + Regresion Logistica)" },
@@ -842,7 +842,7 @@ export default function App() {
                             </span>
                           </div>
                           <div style={{ fontSize:11, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginTop:2, display:"flex", alignItems:"center", gap:6 }}>
-                            {a.league} · {a.kickoff} · Î» {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}
+                            {a.league} · {a.kickoff} · x {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}
                             {a.bookmaker === "simulated"
                               ? <span title="Cuotas simuladas - partidos reales con cuotas generadas por el modelo" style={{ fontSize:9, color:C.amber, border:`1px solid ${C.amber}40`, borderRadius:2, padding:"0 4px" }}>SIM</span>
                               : <span title="Datos reales de bookmaker" style={{ fontSize:9, color:C.green, border:`1px solid ${C.green}40`, borderRadius:2, padding:"0 4px" }}>REAL</span>
@@ -1045,7 +1045,7 @@ export default function App() {
               <Panel title="PARÃMETROS INTERNOS DEL MODELO">
                 <div style={{ padding:"14px", display:"flex", flexDirection:"column", gap:11 }}>
                   {[
-                    { label:"Ventaja de local (Î»)",       value:"1.131", bar:0.57, color:C.green,  tip:"Factor de ajuste por jugar en casa" },
+                    { label:"Ventaja de local (x)",       value:"1.131", bar:0.57, color:C.green,  tip:"Factor de ajuste por jugar en casa" },
                     { label:"Kelly fraccionado",           value:"50%",   bar:0.50, color:C.blue,   tip:"Usamos el 50% del Kelly para reducir riesgo" },
                     { label:"Peso modelo Poisson",         value:"60%",   bar:0.60, color:C.green,  tip:"Importancia del modelo de Poisson en el resultado final" },
                     { label:"Peso Regresion Logistica",    value:"40%",   bar:0.40, color:C.blue,   tip:"Importancia del modelo de ML en el resultado final" },

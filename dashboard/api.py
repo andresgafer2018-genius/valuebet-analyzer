@@ -1,5 +1,5 @@
 """
-API REST – Producción (Railway)
+API REST â€“ ProducciÃ³n (Railway)
 ================================
 - CORS configurado para aceptar el dominio de Vercel
 - Variables de entorno para API keys
@@ -58,7 +58,7 @@ def _train_and_analyze():
     pm = PoissonModel(); pm.fit(df)
     lm = LogisticModel(); lm.fit(df)
 
-    # Calibración de probabilidades (Platt Scaling)
+    # CalibraciÃ³n de probabilidades (Platt Scaling)
     cal = ProbabilityCalibrator()
     proba_list = []
     results    = []
@@ -97,7 +97,7 @@ def _train_and_analyze():
             t  = ph+pd+pa
             pred.update({"p_home": round(ph/t,4), "p_draw": round(pd/t,4), "p_away": round(pa/t,4)})
 
-        # Calibración final
+        # CalibraciÃ³n final
         pred = cal.calibrate(pred)
 
         odds_list = [fetcher.get_simulated_odds(match) for _ in range(3)]
@@ -358,62 +358,3 @@ def alerts_history():
             if hasattr(v, 'isoformat'):
                 h[k] = v.isoformat()
     return jsonify({'alerts': history})
-
-# -- BETS HISTORY ENDPOINTS --------------------------------------------------
-
-
-@app.route('/api/bets', methods=['GET'])
-def list_bets():
-    result_filter = request.args.get('result', None)
-    limit = int(request.args.get('limit', 100))
-    bets = get_bets(limit=limit, result_filter=result_filter)
-    # Serializar fechas
-    for b in bets:
-        for k, v in b.items():
-            if hasattr(v, 'isoformat'):
-                b[k] = v.isoformat()
-    return jsonify(bets)
-
-@app.route('/api/bets', methods=['POST'])
-def create_bet():
-    data = request.get_json()
-    result = save_bet(
-        home_team   = data.get('home_team'),
-        away_team   = data.get('away_team'),
-        league      = data.get('league'),
-        bet_type    = data.get('bet_type'),
-        odds        = data.get('odds'),
-        edge        = data.get('edge'),
-        kelly_stake = data.get('kelly_stake'),
-        amount_bet  = data.get('amount_bet'),
-        match_date  = data.get('match_date'),
-    )
-    return jsonify(result)
-
-@app.route('/api/bets/<int:bet_id>', methods=['PUT'])
-def update_bet(bet_id):
-    data = request.get_json()
-    result = update_bet_result(
-        bet_id = bet_id,
-        result = data.get('result'),
-        profit = data.get('profit', None),
-    )
-    return jsonify(result)
-
-@app.route('/api/bets/<int:bet_id>', methods=['DELETE'])
-def remove_bet(bet_id):
-    result = delete_bet(bet_id)
-    return jsonify(result)
-
-@app.route('/api/bets/stats', methods=['GET'])
-def bets_stats():
-    return jsonify(get_bet_stats())
-
-@app.route('/api/bankroll', methods=['GET'])
-def get_bankroll_endpoint():
-    return jsonify({"amount": get_bankroll()})
-
-@app.route('/api/bankroll', methods=['PUT'])
-def update_bankroll_endpoint():
-    data = request.get_json()
-    return jsonify(update_bankroll(data.get('amount')))

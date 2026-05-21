@@ -1,5 +1,6 @@
 import BacktestPanel from './BacktestPanel.jsx'
 import ModelPredictions from './ModelPredictions.jsx'
+import UserSettings from './UserSettings.jsx'
 import WalkForwardPanel from './WalkForwardPanel.jsx'
 import BetsTracker from './BetsTracker.jsx'
 import SportsPanel from './SportsPanel.jsx'
@@ -611,6 +612,7 @@ export default function App() {
     { id:"walkforward", label:"Walk-Forward" },
     { id:"backtest",    label:"Backtesting",     tooltip:"Simulacion historica de tu estrategia" },
     { id:"bets",        label:"Mis Apuestas",    tooltip:"Historial y seguimiento de apuestas" },
+    { id:"settings",     label:"⚙ Configuracion", tooltip:"Preferencias, notificaciones y modelo" },
   ]
 
   return (
@@ -1047,6 +1049,7 @@ export default function App() {
         {tab === "walkforward"  && <WalkForwardPanel />}
         {tab === "backtest"     && <BacktestPanel />}
         {tab === "bets"         && <BetsTracker />}
+        {tab === "settings"     && <UserSettings />}
 
         {/* === TAB: ANALISIS === */}
         {tab === "analysis" && (

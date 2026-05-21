@@ -436,8 +436,17 @@ function StatsRow({ alerts }) {
   const highConf  = alerts.filter(a => a.confidence==="ALTA").length
   const avgEdge   = total ? (alerts.reduce((s,a) => s+a.edge_pct,0)/total).toFixed(1) : "0.0"
   const avgOdd    = total ? (alerts.reduce((s,a) => s+(a.odd||0),0)/total).toFixed(2) : "0.00"
-  const overCount = alerts.filter(a => a.market?.includes("over")).length
-  const homeCount = alerts.filter(a => a.market==="1X2_home").length
+  const overCount = alerts.filter(a =>
+    a.market?.toLowerCase().includes("over") ||
+    a.market_label?.toLowerCase().includes("over") ||
+    a.market?.includes("2.5")
+  ).length
+  const homeCount = alerts.filter(a =>
+    a.market === "1X2_home" ||
+    a.market === "home" ||
+    a.market_label?.toLowerCase().includes("local") ||
+    a.market_label?.toLowerCase().includes("home")
+  ).length
 
   return (
     <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10 }}>
@@ -481,8 +490,17 @@ export default function ModelPredictions({ bankroll }) {
   const filtered = alerts.filter(a =>
     filter === "all"   ? true :
     filter === "alta"  ? a.confidence === "ALTA" :
-    filter === "over"  ? a.market?.includes("over") :
-    filter === "home"  ? a.market === "1X2_home" : true
+    filter === "over"  ? (
+      a.market?.toLowerCase().includes("over") ||
+      a.market?.includes("2.5") ||
+      a.market_label?.toLowerCase().includes("over")
+    ) :
+    filter === "home"  ? (
+      a.market === "1X2_home" ||
+      a.market === "home" ||
+      a.market_label?.toLowerCase().includes("local") ||
+      a.market_label?.toLowerCase().includes("home")
+    ) : true
   )
 
   const sorted = [...filtered].sort((a, b) => {

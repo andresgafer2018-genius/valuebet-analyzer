@@ -25,8 +25,8 @@ const C = {
 const confColor = c => c==="ALTA" ? C.green : c==="MEDIA" ? C.amber : C.text1
 const confBg    = c => c==="ALTA" ? C.greenDim : c==="MEDIA" ? C.amberDim : "transparent"
 const leagueIcon = l =>
-  l.includes("La Liga") ? "" : l.includes("Premier") ? "" :
-  l.includes("Arg") ? "" : l.includes("Champ") ? "" : ""
+  l.includes("La Liga") ? "🇪🇸" : l.includes("Premier") ? "🏴󠁧󠁢󠁥󠁮󠁧󠁿" :
+  l.includes("Arg") ? "🇦🇷" : l.includes("Champ") ? "🏆" : "⚽"
 
 function genBankrollCurve(currentBalance, days = 60) {
   let bal = currentBalance * 0.92, data = []
@@ -112,11 +112,11 @@ const EDGE_DIST = [
 function HelpPanel({ onClose }) {
   const [section, setSection] = useState("inicio")
   const sections = [
-    { id:"inicio",    label:"?Que es esto?" },
+    { id:"inicio",    label:"¿Que es esto?" },
     { id:"valuebets", label:"Value Bets" },
     { id:"columnas",  label:"Columnas de la tabla" },
     { id:"bankroll",  label:"Bankroll y Kelly" },
-    { id:"flujo",     label:"?Como usarlo?" },
+    { id:"flujo",     label:"¿Como usarlo?" },
   ]
   const content = {
     inicio: (
@@ -129,9 +129,9 @@ function HelpPanel({ onClose }) {
         </p>
         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
           {[
-            { icon:"ðŸ", title:"Modelo de Poisson", desc:"Estima cuantos goles va a meter cada equipo basandose en su historial de partidos." },
-            { icon:"ðŸ§ ", title:"Regresion Logistica", desc:"Refina las probabilidades usando tecnicas de machine learning sobre los datos historicos." },
-            { icon:"ðŸ", title:"Criterio de Kelly", desc:"Calcula el tamano optimo de cada apuesta para maximizar ganancias a largo plazo." },
+            { icon:"📊", title:"Modelo de Poisson", desc:"Estima cuantos goles va a meter cada equipo basandose en su historial de partidos." },
+            { icon:"🧠", title:"Regresion Logistica", desc:"Refina las probabilidades usando tecnicas de machine learning sobre los datos historicos." },
+            { icon:"📐", title:"Criterio de Kelly", desc:"Calcula el tamano optimo de cada apuesta para maximizar ganancias a largo plazo." },
           ].map(item => (
             <div key={item.title} style={{ display:"flex", gap:12, padding:"10px 12px",
               background:C.bg3, borderRadius:6, border:`1px solid ${C.border}` }}>
@@ -155,15 +155,15 @@ function HelpPanel({ onClose }) {
           <p style={{ fontSize:13, color:C.text1, lineHeight:1.7 }}>
             Si el modelo calcula que el Real Madrid tiene un <strong style={{color:C.text0}}>65% de probabilidad</strong> de ganar,
             pero la casa de apuestas ofrece una cuota de <strong style={{color:C.text0}}>2.00</strong> (que implica solo 50%),
-            entonces hay un <strong style={{color:C.green}}>edge del +15%</strong> - !esa es una value bet!
+            entonces hay un <strong style={{color:C.green}}>edge del +15%</strong> - esa es una value bet!
           </p>
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
           <p style={{ fontSize:13, color:C.text1, fontWeight:600 }}>Niveles de confianza:</p>
           {[
-            { conf:"ALTA", color:C.green, desc:"Edge â 10% - Apuesta recomendada, senal fuerte del modelo." },
+            { conf:"ALTA",  color:C.green, desc:"Edge >= 10% - Apuesta recomendada, senal fuerte del modelo." },
             { conf:"MEDIA", color:C.amber, desc:"Edge 5-10% - Oportunidad interesante, moderada." },
-            { conf:"BAJA", color:C.text1, desc:"Edge 3-5% - Senal debil, proceder con cautela." },
+            { conf:"BAJA",  color:C.text1, desc:"Edge 3-5% - Senal debil, proceder con cautela." },
           ].map(item => (
             <div key={item.conf} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"8px 12px",
               background:C.bg3, borderRadius:6 }}>
@@ -199,17 +199,17 @@ function HelpPanel({ onClose }) {
     bankroll: (
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
         <div style={{ padding:"12px 14px", background:C.greenDim, border:`1px solid ${C.green}40`, borderRadius:6 }}>
-          <p style={{ fontSize:13, color:C.green, fontWeight:600, marginBottom:6 }}>?Que es el Bankroll?</p>
+          <p style={{ fontSize:13, color:C.green, fontWeight:600, marginBottom:6 }}>¿Que es el Bankroll?</p>
           <p style={{ fontSize:13, color:C.text1, lineHeight:1.7 }}>
-            El <strong style={{color:C.text0}}>bankroll</strong> es el capital total que destinas a las apuestas. 
+            El <strong style={{color:C.text0}}>bankroll</strong> es el capital total que destinas a las apuestas.
             Es fundamental gestionarlo correctamente para sobrevivir las rachas negativas y capitalizar las positivas.
           </p>
         </div>
         <div style={{ padding:"12px 14px", background:C.blueDim, border:`1px solid ${C.blue}40`, borderRadius:6 }}>
-          <p style={{ fontSize:13, color:C.blue, fontWeight:600, marginBottom:6 }}>?Que es el Criterio de Kelly?</p>
+          <p style={{ fontSize:13, color:C.blue, fontWeight:600, marginBottom:6 }}>¿Que es el Criterio de Kelly?</p>
           <p style={{ fontSize:13, color:C.text1, lineHeight:1.7 }}>
-            Kelly es una formula matematica que calcula el <strong style={{color:C.text0}}>tamano optimo de cada apuesta</strong> 
-            segun tu ventaja y la cuota disponible. Apostamos el <strong style={{color:C.text0}}>50% del Kelly completo</strong> 
+            Kelly es una formula matematica que calcula el <strong style={{color:C.text0}}>tamano optimo de cada apuesta</strong>
+            segun tu ventaja y la cuota disponible. Apostamos el <strong style={{color:C.text0}}>50% del Kelly completo</strong>
             (Kelly fraccionado) para reducir el riesgo.
           </p>
         </div>
@@ -223,7 +223,7 @@ function HelpPanel({ onClose }) {
           ].map((rule, i) => (
             <div key={i} style={{ display:"flex", gap:10, alignItems:"flex-start", padding:"8px 12px",
               background:C.bg3, borderRadius:5 }}>
-              <span style={{ color:C.green, fontWeight:700, flexShrink:0 }}>âœ</span>
+              <span style={{ color:C.green, fontWeight:700, flexShrink:0 }}>✓</span>
               <span style={{ fontSize:12, color:C.text1, lineHeight:1.6 }}>{rule}</span>
             </div>
           ))}
@@ -269,11 +269,11 @@ function HelpPanel({ onClose }) {
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
           padding:"14px 18px", borderBottom:`1px solid ${C.border}`, background:C.bg3 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <span style={{ fontSize:18 }}>ðŸ</span>
+            <span style={{ fontSize:18 }}>📖</span>
             <span style={{ fontSize:15, fontWeight:600, color:C.text0 }}>Guia de Uso - ValueBet Analyzer</span>
           </div>
           <button onClick={onClose} style={{ background:"none", border:"none",
-            color:C.text1, cursor:"pointer", fontSize:18, lineHeight:1 }}>âœ</button>
+            color:C.text1, cursor:"pointer", fontSize:18, lineHeight:1 }}>✕</button>
         </div>
         {/* Body */}
         <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
@@ -302,7 +302,6 @@ function HelpPanel({ onClose }) {
   )
 }
 
-/* --- FORM & H2H PANEL ---------------------------------------------------- */
 /* --- FORM & H2H PANEL ---------------------------------------------------- */
 function FormBar({ value, max = 1.4, color }) {
   const pct = Math.min((value / max) * 100, 100)
@@ -334,10 +333,10 @@ function FormH2HPanel({ alert, onClose }) {
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
         <span style={{ fontSize:11, color:G.blue, fontFamily:"'JetBrains Mono',monospace",
           letterSpacing:".08em", fontWeight:700 }}>
-          ðŸ FORMA RECIENTE & H2H - {alert.home_team} vs {alert.away_team}
+          📋 FORMA RECIENTE & H2H - {alert.home_team} vs {alert.away_team}
         </span>
         <button onClick={onClose} style={{ background:"none", border:"none",
-          color:G.text2, cursor:"pointer", fontSize:14 }}>âœ</button>
+          color:G.text2, cursor:"pointer", fontSize:14 }}>✕</button>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:12 }}>
         {/* Forma Local */}
@@ -353,20 +352,20 @@ function FormH2HPanel({ alert, onClose }) {
                 </span>
                 <div style={{ display:"flex", gap:6, marginTop:2 }}>
                   <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
-                    x local: <b style={{color:G.amber}}>{alert.lambda_home?.toFixed(2)}</b>
+                    λ local: <b style={{color:G.amber}}>{alert.lambda_home?.toFixed(2)}</b>
                   </span>
                   <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
-                    x visita: <b style={{color:G.amber}}>{alert.lambda_away?.toFixed(2)}</b>
+                    λ visita: <b style={{color:G.amber}}>{alert.lambda_away?.toFixed(2)}</b>
                   </span>
                 </div>
               </div>
             : <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>âš½ Ataque</span>
+                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>⚽ Ataque</span>
                   <FormBar value={fh.form_factor_att||1} color={fc(fh.form_factor_att||1)}/>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>ðŸ Defensa</span>
+                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>🛡 Defensa</span>
                   <FormBar value={fh.form_factor_def||1} color={fc(fh.form_factor_def||1)}/>
                 </div>
                 <div style={{ display:"flex", gap:8, marginTop:4, flexWrap:"wrap" }}>
@@ -396,17 +395,17 @@ function FormH2HPanel({ alert, onClose }) {
                 </span>
                 <div style={{ display:"flex", gap:6, marginTop:2 }}>
                   <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
-                    x visita: <b style={{color:G.amber}}>{alert.lambda_away?.toFixed(2)}</b>
+                    λ visita: <b style={{color:G.amber}}>{alert.lambda_away?.toFixed(2)}</b>
                   </span>
                 </div>
               </div>
             : <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>âš½ Ataque</span>
+                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>⚽ Ataque</span>
                   <FormBar value={fa.form_factor_att||1} color={fc(fa.form_factor_att||1)}/>
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>ðŸ Defensa</span>
+                  <span style={{ fontSize:11, color:G.text2, minWidth:80 }}>🛡 Defensa</span>
                   <FormBar value={fa.form_factor_def||1} color={fc(fa.form_factor_def||1)}/>
                 </div>
                 <div style={{ display:"flex", gap:8, marginTop:4, flexWrap:"wrap" }}>
@@ -467,7 +466,7 @@ function FormH2HPanel({ alert, onClose }) {
         {/* Clima */}
         <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
           <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
-            letterSpacing:".08em", marginBottom:8 }}>ðŸŒ¤ CLIMA DEL PARTIDO</div>
+            letterSpacing:".08em", marginBottom:8 }}>🌤 CLIMA DEL PARTIDO</div>
           {!w.available
             ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <span style={{ fontSize:11, color:G.text2 }}>Activando API...</span>
@@ -483,21 +482,21 @@ function FormH2HPanel({ alert, onClose }) {
                 </div>
                 <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
                   <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
-                    ðŸŒ¡ <b style={{color:G.text0}}>{w.temp_c}Â°C</b>
+                    🌡 <b style={{color:G.text0}}>{w.temp_c}°C</b>
                   </span>
                   {w.wind_kph > 0 && (
                     <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
-                      ðŸ <b style={{color:w.wind_kph>30?G.amber:G.text0}}>{w.wind_kph} km/h</b>
+                      💨 <b style={{color:w.wind_kph>30?G.amber:G.text0}}>{w.wind_kph} km/h</b>
                     </span>
                   )}
                   {w.rain_mm > 0 && (
                     <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
-                      ðŸŒ§ <b style={{color:G.blue}}>{w.rain_mm}mm</b>
+                      🌧 <b style={{color:G.blue}}>{w.rain_mm}mm</b>
                     </span>
                   )}
                   {w.snow_mm > 0 && (
                     <span style={{ fontSize:10, color:G.text2, background:G.bg1, padding:"2px 7px", borderRadius:3 }}>
-                      â <b style={{color:G.blue}}>{w.snow_mm}mm</b>
+                      ❄ <b style={{color:G.blue}}>{w.snow_mm}mm</b>
                     </span>
                   )}
                 </div>
@@ -505,7 +504,7 @@ function FormH2HPanel({ alert, onClose }) {
                   background: wf < 0.99 ? wfColor+"15" : G.bg1,
                   border: `1px solid ${wfColor}30` }}>
                   <span style={{ fontSize:10, color:G.text2 }}>
-                    Ajuste x: <b style={{color:wfColor, fontFamily:"'JetBrains Mono',monospace"}}>
+                    Ajuste λ: <b style={{color:wfColor, fontFamily:"'JetBrains Mono',monospace"}}>
                       {wf < 1 ? `${((wf-1)*100).toFixed(1)}%` : "neutro"}
                     </b>
                     {wf < 0.99 && <span style={{color:G.text2}}> goles esperados</span>}
@@ -603,14 +602,14 @@ export default function App() {
     : "0.0"
 
   const tabs = [
-  { id:"alerts",   label:"Value Bets",      tooltip:"Apuestas con ventaja matematica detectadas hoy" },
-  { id:"bankroll", label:"Bankroll",         tooltip:"Gestion de tu capital y curva de rendimiento" },
-  { id:"analysis", label:"Analisis",         tooltip:"Precision del modelo y fuentes de datos" },
-  { id:"sports",   label:"Tenis & Basquet",  tooltip:"Analisis de tenis y basquet" },
-  { id:"walkforward", label:"Walk-Forward" },
-  { id:"backtest", label:"Backtesting",    tooltip:"Simulacion historica de tu estrategia" },
-  { id:"bets",     label:"Mis Apuestas",  tooltip:"Historial y seguimiento de apuestas" },
-]
+    { id:"alerts",      label:"Value Bets",     tooltip:"Apuestas con ventaja matematica detectadas hoy" },
+    { id:"bankroll",    label:"Bankroll",        tooltip:"Gestion de tu capital y curva de rendimiento" },
+    { id:"analysis",    label:"Analisis",        tooltip:"Precision del modelo y fuentes de datos" },
+    { id:"sports",      label:"Tenis & Basquet", tooltip:"Analisis de tenis y basquet" },
+    { id:"walkforward", label:"Walk-Forward" },
+    { id:"backtest",    label:"Backtesting",     tooltip:"Simulacion historica de tu estrategia" },
+    { id:"bets",        label:"Mis Apuestas",    tooltip:"Historial y seguimiento de apuestas" },
+  ]
 
   return (
     <div style={{ background:C.bg0, minHeight:"100vh", color:C.text0,
@@ -648,7 +647,7 @@ export default function App() {
             <div style={{ width:30, height:30, borderRadius:6,
               background:`linear-gradient(135deg,${C.green}30,${C.blue}20)`,
               border:`1px solid ${C.green}40`, display:"flex", alignItems:"center",
-              justifyContent:"center", fontSize:15 }}>â</div>
+              justifyContent:"center", fontSize:15 }}>📈</div>
             <div>
               <span style={{ fontSize:15, fontWeight:700, letterSpacing:"-.02em" }}>ValueBet</span>
               <span style={{ fontSize:10, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginLeft:6 }}>ANALYZER</span>
@@ -688,7 +687,7 @@ export default function App() {
           <button className="btn" onClick={doRefresh}
             style={{ display:"flex", alignItems:"center", gap:5 }}>
             <span style={{ display:"inline-block",
-              animation:refreshing?"spin 1s linear infinite":"none", fontSize:14 }}>â</span>
+              animation:refreshing?"spin 1s linear infinite":"none", fontSize:14 }}>↻</span>
             {refreshing ? "Analizando..." : "Actualizar Ahora"}
           </button>
         </div>
@@ -712,14 +711,14 @@ export default function App() {
         <div style={{ background:C.red+"20", border:`1px solid ${C.red}40`,
           margin:"12px 20px", borderRadius:6, padding:"12px 16px",
           display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-          <span style={{ fontSize:13, color:C.red }}>âš  Error conectando al servidor: {error}</span>
+          <span style={{ fontSize:13, color:C.red }}>⚠ Error conectando al servidor: {error}</span>
           <button className="btn" onClick={loadAll}>Reintentar</button>
         </div>
       )}
 
       <div style={{ padding:"16px 20px", animation:"fadeIn .3s ease" }}>
 
-        {/* â TAB: VALUE BETS â */}
+        {/* === TAB: VALUE BETS === */}
         {tab === "alerts" && (
           <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
 
@@ -728,9 +727,9 @@ export default function App() {
               {loading
                 ? Array(4).fill(0).map((_,i) => <Panel key={i} style={{ padding:"14px 16px" }}><Skeleton h={48}/></Panel>)
                 : [
-                  { label:"Apuestas de Valor",      value:alerts.length,  sub:"detectadas hoy",           color:C.blue  },
-                  { label:"Confianza Alta",          value:highConf,       sub:"con ventaja â 10%",        color:C.green },
-                  { label:"Mayor Ventaja (Edge)",    value:`+${maxEdge}%`, sub:"mejor apuesta disponible", color:C.amber },
+                  { label:"Apuestas de Valor",        value:alerts.length,  sub:"detectadas hoy",            color:C.blue  },
+                  { label:"Confianza Alta",            value:highConf,       sub:"con ventaja >= 10%",         color:C.green },
+                  { label:"Mayor Ventaja (Edge)",      value:`+${maxEdge}%`, sub:"mejor apuesta disponible",  color:C.amber },
                   { label:"Capital en Juego Sugerido", value:`$${Math.round(bk*0.20)}`, sub:"maximo recomendado (20%)", color:C.text0 },
                 ].map(s => (
                   <Panel key={s.label} style={{ padding:"14px 16px" }}>
@@ -768,7 +767,7 @@ export default function App() {
                     {selected.size} apuesta{selected.size>1?"s":""} seleccionada{selected.size>1?"s":""} · Total a apostar: ${totalStake}
                   </span>
                   <button onClick={()=>setSelected(new Set())}
-                    style={{ background:"none", border:"none", color:C.green, cursor:"pointer", fontSize:14 }}>âœ</button>
+                    style={{ background:"none", border:"none", color:C.green, cursor:"pointer", fontSize:14 }}>✕</button>
                 </div>
               )}
               <span style={{ fontSize:12, color:C.text2, marginLeft:selected.size>0?"0":"auto" }}>
@@ -783,15 +782,15 @@ export default function App() {
                 gridTemplateColumns:"20px 70px minmax(0,1fr) 100px 55px 65px 65px 60px 90px",
                 gap:6, padding:"8px 14px", borderBottom:`1px solid ${C.border}`, background:C.bg3 }}>
                 {[
-                  { h:"",          tip:"" },
-                  { h:"CONFIANZA", tip:"Nivel de confianza: ALTA (edge â10%), MEDIA (5-10%), BAJA (3-5%)" },
-                  { h:"PARTIDO",   tip:"Equipos, liga y hora del partido. x = goles esperados segun el modelo" },
-                  { h:"TIPO",      tip:"Mercado: 1X2 Local/Empate/Visitante o Over/Under 2.5 goles" },
-                  { h:"CUOTA",     tip:"Cuota ofrecida por la casa de apuestas. Mayor cuota = mayor pago potencial" },
-                  { h:"P.MOD",     tip:"Probabilidad calculada por nuestro modelo (Poisson + Regresion Logistica)" },
-                  { h:"EDGE",      tip:"Ventaja matematica sobre la casa. Edge = P.Modelo - P.Implicita en cuota" },
-                  { h:"STAKE",     tip:"Monto sugerido a apostar en $ segun tu bankroll y el criterio de Kelly" },
-                  { h:"% / INFO",  tip:"% del bankroll total sugerido por Kelly. Clic en âinfo para ver forma reciente y H2H" },
+                  { h:"",         tip:"" },
+                  { h:"CONFIANZA",tip:"Nivel de confianza: ALTA (edge >=10%), MEDIA (5-10%), BAJA (3-5%)" },
+                  { h:"PARTIDO",  tip:"Equipos, liga y hora del partido. λ = goles esperados segun el modelo" },
+                  { h:"TIPO",     tip:"Mercado: 1X2 Local/Empate/Visitante o Over/Under 2.5 goles" },
+                  { h:"CUOTA",    tip:"Cuota ofrecida por la casa de apuestas. Mayor cuota = mayor pago potencial" },
+                  { h:"P.MOD",    tip:"Probabilidad calculada por nuestro modelo (Poisson + Regresion Logistica)" },
+                  { h:"EDGE",     tip:"Ventaja matematica sobre la casa. Edge = P.Modelo - P.Implicita en cuota" },
+                  { h:"STAKE",    tip:"Monto sugerido a apostar en $ segun tu bankroll y el criterio de Kelly" },
+                  { h:"% / INFO", tip:"% del bankroll total sugerido por Kelly. Clic en info para ver forma reciente y H2H" },
                 ].map(({h,tip},i)=>(
                   <span key={i} title={tip} style={{ fontSize:10, color:C.text2,
                     fontFamily:"'JetBrains Mono',monospace", letterSpacing:".06em",
@@ -830,7 +829,7 @@ export default function App() {
                             border:`1px solid ${selected.has(rowKey)?C.green:C.border2}`,
                             background:selected.has(rowKey)?C.green:"transparent",
                             display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, cursor:"pointer" }}>
-                          {selected.has(rowKey) && <span style={{ fontSize:9, color:"#000", fontWeight:900, lineHeight:1 }}>âœ</span>}
+                          {selected.has(rowKey) && <span style={{ fontSize:9, color:"#000", fontWeight:900, lineHeight:1 }}>✓</span>}
                         </div>
                         <Badge text={a.confidence} color={confColor(a.confidence)} bg={confBg(a.confidence)}/>
                         <div style={{ minWidth:0 }}>
@@ -842,7 +841,7 @@ export default function App() {
                             </span>
                           </div>
                           <div style={{ fontSize:11, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginTop:2, display:"flex", alignItems:"center", gap:6 }}>
-                            {a.league} · {a.kickoff} · x {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}
+                            {a.league} · {a.kickoff} · λ {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}
                             {a.bookmaker === "simulated"
                               ? <span title="Cuotas simuladas - partidos reales con cuotas generadas por el modelo" style={{ fontSize:9, color:C.amber, border:`1px solid ${C.amber}40`, borderRadius:2, padding:"0 4px" }}>SIM</span>
                               : <span title="Datos reales de bookmaker" style={{ fontSize:9, color:C.green, border:`1px solid ${C.green}40`, borderRadius:2, padding:"0 4px" }}>REAL</span>
@@ -873,9 +872,32 @@ export default function App() {
                               color: isExp?C.blue:C.text2, borderRadius:3,
                               padding:"1px 6px", fontSize:10, cursor:"pointer",
                               fontFamily:"'JetBrains Mono',monospace" }}>
-                            {isExp?"â cerrar":"â info"}
+                            {isExp?"▲ cerrar":"▼ info"}
                           </button>
-              <button onClick={(e)=>{e.stopPropagation();fetch(`${API}/api/bets`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({home_team:a.home_team,away_team:a.away_team,league:a.league,bet_type:a.market,odds:a.odd,edge:a.edge_pct/100,kelly_stake:a.kelly_frac,amount_bet:a.stake,match_date:a.kickoff})}).then(()=>alert("Apuesta guardada"))}} style={{background:"#00d4a018",border:"1px solid #00d4a044",color:"#00d4a0",borderRadius:3,padding:"1px 6px",fontSize:10,cursor:"pointer",marginTop:2,fontFamily:"JetBrains Mono,monospace"}}>+ guardar</button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              fetch(`${API}/api/bets`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  home_team:    a.home_team,
+                                  away_team:    a.away_team,
+                                  league:       a.league,
+                                  bet_type:     a.market,
+                                  odds:         a.odd,
+                                  edge:         a.edge_pct / 100,
+                                  kelly_stake:  a.kelly_frac,
+                                  amount_bet:   a.stake,
+                                  match_date:   a.kickoff,
+                                })
+                              }).then(() => alert("Apuesta guardada"))
+                            }}
+                            style={{ background:"#00d4a018", border:"1px solid #00d4a044",
+                              color:"#00d4a0", borderRadius:3, padding:"1px 6px", fontSize:10,
+                              cursor:"pointer", marginTop:2, fontFamily:"'JetBrains Mono',monospace" }}>
+                            + guardar
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -895,7 +917,7 @@ export default function App() {
                 <span style={{ fontSize:11, color:C.text2 }}>
                   Modelos: Poisson + Regresion Logistica (60/40) · Kelly fraccionado al 50% · Ventaja minima 3%
                 </span>
-                <button className="btn green">âš¡ Notificar por Telegram</button>
+                <button className="btn green">⚡ Notificar por Telegram</button>
               </div>
             </Panel>
 
@@ -904,11 +926,11 @@ export default function App() {
               <div key={i} style={{ padding:"11px 14px", background:C.amberDim,
                 border:`1px solid ${C.amber}30`, borderRadius:6,
                 display:"flex", alignItems:"center", gap:12 }}>
-                <span style={{ color:C.amber, fontSize:16, flexShrink:0 }}>âš¡</span>
+                <span style={{ color:C.amber, fontSize:16, flexShrink:0 }}>⚡</span>
                 <div>
                   <span style={{ fontSize:13, fontWeight:700, color:C.amber }}>OPORTUNIDAD DE ARBITRAJE </span>
                   <span style={{ fontSize:13, color:C.text1 }}>
-                    {arb.match} - {arb.league} â Ganancia garantizada: +{arb.profit_pct}%
+                    {arb.match} - {arb.league} → Ganancia garantizada: +{arb.profit_pct}%
                   </span>
                 </div>
               </div>
@@ -916,17 +938,17 @@ export default function App() {
           </div>
         )}
 
-        {/* â TAB: BANKROLL â */}
+        {/* === TAB: BANKROLL === */}
         {tab === "bankroll" && (
           <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
               {loading
                 ? Array(4).fill(0).map((_,i)=><Panel key={i} style={{padding:"14px 16px"}}><Skeleton h={48}/></Panel>)
                 : [
-                  { label:"Capital Actual",         value:`$${bk.toLocaleString()}`,          color:C.text0 },
-                  { label:"Rendimiento Total (ROI)", value:`${roi>0?"+":""}${roi}%`,            color:roi>0?C.green:C.red },
-                  { label:"Capital Sugerido en Juego", value:`$${Math.round(bkData?.suggested_exposure||0)}`, color:C.amber },
-                  { label:"Apuestas Activas",        value:alerts.length,                     color:C.blue  },
+                  { label:"Capital Actual",            value:`$${bk.toLocaleString()}`,                        color:C.text0 },
+                  { label:"Rendimiento Total (ROI)",   value:`${roi>0?"+":""}${roi}%`,                         color:roi>0?C.green:C.red },
+                  { label:"Capital Sugerido en Juego", value:`$${Math.round(bkData?.suggested_exposure||0)}`,  color:C.amber },
+                  { label:"Apuestas Activas",          value:alerts.length,                                    color:C.blue  },
                 ].map(s => (
                   <Panel key={s.label} style={{ padding:"14px 16px" }}>
                     <Stat label={s.label} value={s.value} color={s.color}/>
@@ -936,7 +958,7 @@ export default function App() {
             </div>
 
             <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:12 }}>
-              <Panel title="EVOLUCIÃN DEL CAPITAL - ÃšLTIMOS 60 DÃAS" style={{ padding:"14px" }}>
+              <Panel title="EVOLUCION DEL CAPITAL - ULTIMOS 60 DIAS" style={{ padding:"14px" }}>
                 <ResponsiveContainer width="100%" height={230}>
                   <AreaChart data={bankrollCurve} margin={{ top:8, right:8, left:-10, bottom:0 }}>
                     <defs>
@@ -958,7 +980,7 @@ export default function App() {
                 </ResponsiveContainer>
               </Panel>
 
-              <Panel title="DISTRIBUCIÃN DE VENTAJA HISTÃRICA" style={{ padding:"14px" }}>
+              <Panel title="DISTRIBUCION DE VENTAJA HISTORICA" style={{ padding:"14px" }}>
                 <ResponsiveContainer width="100%" height={230}>
                   <BarChart data={EDGE_DIST} margin={{ top:8, right:5, left:-20, bottom:0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false}/>
@@ -1013,18 +1035,22 @@ export default function App() {
           </div>
         )}
 
-        {/* â TAB: ANÃLISIS â */}
-        {tab === "sports" && <SportsPanel />}
-          {tab === "walkforward" && <WalkForwardPanel />}{tab === "backtest" && <BacktestPanel />}{tab === "bets" && <BetsTracker />}
-          {tab === "analysis" && (
+        {/* === TAB: SPORTS / WALKFORWARD / BACKTEST / BETS === */}
+        {tab === "sports"       && <SportsPanel />}
+        {tab === "walkforward"  && <WalkForwardPanel />}
+        {tab === "backtest"     && <BacktestPanel />}
+        {tab === "bets"         && <BetsTracker />}
+
+        {/* === TAB: ANALISIS === */}
+        {tab === "analysis" && (
           <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-            <Panel title="PRECISIÃN DEL MODELO POR TIPO DE APUESTA">
+            <Panel title="PRECISION DEL MODELO POR TIPO DE APUESTA">
               <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)" }}>
                 {[
-                  { mkt:"Victoria Local",    acc:54.2, color:C.amber },
-                  { mkt:"Empate",            acc:28.4, color:C.text1 },
-                  { mkt:"Victoria Visitante",acc:41.1, color:C.amber },
-                  { mkt:"Mas de 2.5 Goles", acc:61.8, color:C.green },
+                  { mkt:"Victoria Local",     acc:54.2, color:C.amber },
+                  { mkt:"Empate",             acc:28.4, color:C.text1 },
+                  { mkt:"Victoria Visitante", acc:41.1, color:C.amber },
+                  { mkt:"Mas de 2.5 Goles",  acc:61.8, color:C.green },
                   { mkt:"Menos de 2.5 Goles",acc:58.3, color:C.green },
                 ].map((m,i) => (
                   <div key={i} style={{ padding:"16px 14px",
@@ -1042,15 +1068,15 @@ export default function App() {
             </Panel>
 
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-              <Panel title="PARÃMETROS INTERNOS DEL MODELO">
+              <Panel title="PARAMETROS INTERNOS DEL MODELO">
                 <div style={{ padding:"14px", display:"flex", flexDirection:"column", gap:11 }}>
                   {[
-                    { label:"Ventaja de local (x)",       value:"1.131", bar:0.57, color:C.green,  tip:"Factor de ajuste por jugar en casa" },
-                    { label:"Kelly fraccionado",           value:"50%",   bar:0.50, color:C.blue,   tip:"Usamos el 50% del Kelly para reducir riesgo" },
-                    { label:"Peso modelo Poisson",         value:"60%",   bar:0.60, color:C.green,  tip:"Importancia del modelo de Poisson en el resultado final" },
-                    { label:"Peso Regresion Logistica",    value:"40%",   bar:0.40, color:C.blue,   tip:"Importancia del modelo de ML en el resultado final" },
-                    { label:"Ventaja minima para apostar", value:"3%",    bar:0.15, color:C.amber,  tip:"No apostamos si el edge es menor a este valor" },
-                    { label:"Limite de exposicion diaria", value:"20%",   bar:0.20, color:C.purple, tip:"Maximo del capital total por dia" },
+                    { label:"Ventaja de local (λ)",        value:"1.131", bar:0.57, color:C.green,  tip:"Factor de ajuste por jugar en casa" },
+                    { label:"Kelly fraccionado",            value:"50%",   bar:0.50, color:C.blue,   tip:"Usamos el 50% del Kelly para reducir riesgo" },
+                    { label:"Peso modelo Poisson",          value:"60%",   bar:0.60, color:C.green,  tip:"Importancia del modelo de Poisson en el resultado final" },
+                    { label:"Peso Regresion Logistica",     value:"40%",   bar:0.40, color:C.blue,   tip:"Importancia del modelo de ML en el resultado final" },
+                    { label:"Ventaja minima para apostar",  value:"3%",    bar:0.15, color:C.amber,  tip:"No apostamos si el edge es menor a este valor" },
+                    { label:"Limite de exposicion diaria",  value:"20%",   bar:0.20, color:C.purple, tip:"Maximo del capital total por dia" },
                   ].map(p => (
                     <div key={p.label} style={{ display:"flex", alignItems:"center", gap:12 }} title={p.tip}>
                       <span style={{ fontSize:12, color:C.text1, minWidth:200, flexShrink:0, cursor:"help" }}>{p.label}</span>
@@ -1067,10 +1093,10 @@ export default function App() {
               <Panel title="FUENTES DE DATOS">
                 <div style={{ padding:"14px", display:"flex", flexDirection:"column", gap:10 }}>
                   {[
-                    { name:"Datos historicos de partidos", status:"âœ Activo",    color:C.green,  detail:"Datos sinteticos generados con distribucion Poisson" },
-                    { name:"The Odds API (cuotas reales)", status:"â Pendiente", color:C.text2,  detail:"500 solicitudes/mes en plan gratuito"   },
-                    { name:"API-Football (estadisticas)",  status:"âœ Activo",  color:C.green,  detail:"100 solicitudes/dia - partidos reales conectados"   },
-                    { name:"OpenWeatherMap (clima)",       status:"â Pendiente", color:C.text2,  detail:"1000 solicitudes/dia en plan gratuito"  },
+                    { name:"Datos historicos de partidos", status:"✓ Activo",    color:C.green,  detail:"Datos sinteticos generados con distribucion Poisson" },
+                    { name:"The Odds API (cuotas reales)", status:"✕ Pendiente", color:C.text2,  detail:"500 solicitudes/mes en plan gratuito" },
+                    { name:"API-Football (estadisticas)",  status:"✓ Activo",    color:C.green,  detail:"100 solicitudes/dia - partidos reales conectados" },
+                    { name:"OpenWeatherMap (clima)",       status:"✕ Pendiente", color:C.text2,  detail:"1000 solicitudes/dia en plan gratuito" },
                   ].map(s => (
                     <div key={s.name} style={{ display:"flex", alignItems:"center",
                       justifyContent:"space-between", padding:"10px 0",

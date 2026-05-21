@@ -21,7 +21,7 @@ from data.fetcher import DataFetcher
 from models.engine import PoissonModel, LogisticModel, ValueBetDetector, ArbitrageDetector, ProbabilityCalibrator
 from database.db import init_db
 from models.retrain import run_retrain_async, get_retrain_status
-from database.models import get_bankroll, update_bankroll, save_alerts, get_alerts_history, get_bets, get_bet_stats, save_bet, resolve_bet, update_bet_result, delete_bet
+from database.models import get_bankroll, update_bankroll, save_alerts, get_alerts_history, get_bets, get_bet_stats, save_bet, resolve_bet, update_bet_result, delete_bet, get_settings, save_settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -358,3 +358,22 @@ def alerts_history():
             if hasattr(v, 'isoformat'):
                 h[k] = v.isoformat()
     return jsonify({'alerts': history})
+
+    # SETTINGS
+
+@app.route('/api/settings', methods=['GET'])
+def get_settings_endpoint():
+    try:
+        data = get_settings()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({}), 200
+
+@app.route('/api/settings', methods=['POST'])
+def save_settings_endpoint():
+    try:
+        data = request.get_json(silent=True) or {}
+        save_settings(data)
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

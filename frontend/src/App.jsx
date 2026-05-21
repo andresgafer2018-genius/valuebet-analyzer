@@ -1,4 +1,5 @@
 import BacktestPanel from './BacktestPanel.jsx'
+import ModelPredictions from './ModelPredictions.jsx'
 import WalkForwardPanel from './WalkForwardPanel.jsx'
 import BetsTracker from './BetsTracker.jsx'
 import SportsPanel from './SportsPanel.jsx'
@@ -602,6 +603,7 @@ export default function App() {
     : "0.0"
 
   const tabs = [
+    { id:"predictions",  label:"Predicciones",  tooltip:"Predicciones del modelo y probabilidades" },
     { id:"alerts",      label:"Value Bets",     tooltip:"Apuestas con ventaja matematica detectadas hoy" },
     { id:"bankroll",    label:"Bankroll",        tooltip:"Gestion de tu capital y curva de rendimiento" },
     { id:"analysis",    label:"Analisis",        tooltip:"Precision del modelo y fuentes de datos" },
@@ -1036,6 +1038,9 @@ export default function App() {
             </Panel>
           </div>
         )}
+
+        {/* === TAB: PREDICCIONES === */}
+        {tab === "predictions" && <ModelPredictions bankroll={bk}/>}
 
         {/* === TAB: SPORTS / WALKFORWARD / BACKTEST / BETS === */}
         {tab === "sports"       && <SportsPanel />}

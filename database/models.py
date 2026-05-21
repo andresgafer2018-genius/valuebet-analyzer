@@ -157,3 +157,32 @@ def delete_bet(bet_id):
         return {"status": "deleted"}
     finally:
         conn.close()
+
+
+def get_settings():
+    """Obtiene la configuracion del usuario."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('SELECT key, value FROM user_settings')
+            rows = cur.fetchall()
+            return {r['key']: r['value'] for r in rows} if rows else {}
+    finally:
+        conn.close()
+
+
+def save_settings(settings: dict):
+    """Guarda la configuracion del usuario (upsert)."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            for key, value in settings.items():
+                cur.execute("""
+                    INSERT INTO user_settings (key, value)
+                    VALUES (%s, %s)
+                    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+                """, (key, str(value)))
+        conn.commit()
+        return {"status": "ok"}
+    finally:
+        conn.close()

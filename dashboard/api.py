@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT))
 
 from data.fetcher import DataFetcher
 from models.engine import PoissonModel, LogisticModel, ValueBetDetector, ArbitrageDetector, ProbabilityCalibrator
-from database.db import init_db
+from database.db import init_db, create_user_settings_table
 from models.retrain import run_retrain_async, get_retrain_status
 from database.models import get_bankroll, update_bankroll, save_alerts, get_alerts_history, get_bets, get_bet_stats, save_bet, resolve_bet, update_bet_result, delete_bet, get_settings, save_settings
 
@@ -40,6 +40,7 @@ CORS(app, origins=ALLOWED_ORIGINS)
 _db_available = False
 try:
     init_db()
+    create_user_settings_table()
     _db_available = True
     log.info('PostgreSQL conectado correctamente')
 except Exception as _e:

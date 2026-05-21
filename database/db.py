@@ -251,3 +251,20 @@ def update_bankroll(amount):
     except Exception as e:
         log.error(f'[DB] Error actualizando bankroll: {e}')
         return False
+
+
+def create_user_settings_table():
+    """Crea la tabla user_settings si no existe."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS user_settings (
+                    key VARCHAR(100) PRIMARY KEY,
+                    value TEXT,
+                    updated_at TIMESTAMP DEFAULT NOW()
+                )
+            """)
+        conn.commit()
+    finally:
+        conn.close()

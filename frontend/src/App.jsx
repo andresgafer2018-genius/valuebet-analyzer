@@ -647,7 +647,9 @@ export default function App() {
             <div style={{ width:30, height:30, borderRadius:6,
               background:`linear-gradient(135deg,${C.green}30,${C.blue}20)`,
               border:`1px solid ${C.green}40`, display:"flex", alignItems:"center",
-              justifyContent:"center", fontSize:15 }}>📈</div>
+              justifyContent:"center" }}>
+              <img src="/logo.png" alt="ValueBet" style={{ width:26, height:26, objectFit:"contain" }}/>
+            </div>
             <div>
               <span style={{ fontSize:15, fontWeight:700, letterSpacing:"-.02em" }}>ValueBet</span>
               <span style={{ fontSize:10, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginLeft:6 }}>ANALYZER</span>

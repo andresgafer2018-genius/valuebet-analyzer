@@ -471,10 +471,10 @@ function FormH2HPanel({ alert, onClose }) {
             letterSpacing:".08em", marginBottom:8 }}>🌤 CLIMA DEL PARTIDO</div>
           {!w.available
             ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                <span style={{ fontSize:11, color:G.text2 }}>Activando API...</span>
+                <span style={{ fontSize:11, color:G.text2 }}>Sin datos de clima disponibles</span>
                 <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
-                  La key de OpenWeatherMap se activa en ~2hs.<br/>
-                  Factor actual: neutro (1.0)
+                  No se pudo obtener el clima para esta liga.<br/>
+                  Factor λ: neutro (1.0)
                 </span>
               </div>
             : <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
@@ -1106,7 +1106,7 @@ export default function App() {
                     { name:"Datos historicos de partidos", status:"✓ Activo",    color:C.green,  detail:"Datos sinteticos generados con distribucion Poisson" },
                     { name:"The Odds API (cuotas reales)", status:"✕ Pendiente", color:C.text2,  detail:"500 solicitudes/mes en plan gratuito" },
                     { name:"API-Football (estadisticas)",  status:"✓ Activo",    color:C.green,  detail:"100 solicitudes/dia - partidos reales conectados" },
-                    { name:"OpenWeatherMap (clima)",       status:"✕ Pendiente", color:C.text2,  detail:"1000 solicitudes/dia en plan gratuito" },
+                    { name:"OpenWeatherMap (clima)",       status:"✓ Activa",    color:C.green,  detail:"1000 solicitudes/dia en plan gratuito" },
                   ].map(s => (
                     <div key={s.name} style={{ display:"flex", alignItems:"center",
                       justifyContent:"space-between", padding:"10px 0",

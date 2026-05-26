@@ -126,6 +126,70 @@ _train_and_analyze()
 def health():
     return jsonify({"status": "ok", "alerts": len(_state["alerts"] or []), "version": "1.1.0"})
 
+@app.route("/api/data-sources")
+def data_sources():
+    """Estado real de cada fuente de datos segun env vars y conectividad."""
+    import requests as _req
+
+    sources = []
+
+    # 1. Datos historicos (siempre activo)
+    sources.append({
+        "name": "Datos historicos de partidos",
+        "status": "active",
+        "label": "Activo",
+        "detail": "Datos sinteticos generados con distribucion Poisson",
+        "matches": len(_state.get("predictions") or []),
+    })
+
+    # 2. The Odds API
+    odds_key = os.getenv("ODDS_API_KEY") or os.getenv("THE_ODDS_API_KEY")
+    sources.append({
+        "name": "The Odds API (cuotas reales)",
+        "status": "active" if odds_key else "inactive",
+        "label": "Activa" if odds_key else "Sin configurar",
+        "detail": "500 solicitudes/mes en plan gratuito",
+    })
+
+    # 3. API-Football / APISPORTS
+    apisports_key = os.getenv("APISPORTS_KEY") or os.getenv("API_FOOTBALL_KEY")
+    sources.append({
+        "name": "API-Football (estadisticas)",
+        "status": "active" if apisports_key else "inactive",
+        "label": "Activa" if apisports_key else "Sin configurar",
+        "detail": "100 solicitudes/dia - partidos reales conectados",
+    })
+
+    # 4. OpenWeatherMap — verificar con llamada real
+    weather_key = os.getenv("OPENWEATHER_KEY") or os.getenv("OPENWEATHERMAP_KEY")
+    weather_ok = False
+    if weather_key:
+        try:
+            r = _req.get(
+                "https://api.openweathermap.org/data/2.5/weather",
+                params={"lat": -34.6, "lon": -58.4, "appid": weather_key},
+                timeout=5
+            )
+            weather_ok = r.status_code == 200
+        except Exception:
+            weather_ok = False
+    sources.append({
+        "name": "OpenWeatherMap (clima)",
+        "status": "active" if weather_ok else ("pending" if weather_key else "inactive"),
+        "label": "Activa" if weather_ok else ("Key configurada" if weather_key else "Sin configurar"),
+        "detail": "1000 solicitudes/dia en plan gratuito",
+    })
+
+    # 5. PostgreSQL
+    sources.append({
+        "name": "PostgreSQL (base de datos)",
+        "status": "active" if _db_available else "inactive",
+        "label": "Conectada" if _db_available else "No disponible",
+        "detail": "Historial de apuestas, bankroll y configuracion",
+    })
+
+    return jsonify({"sources": sources})
+
 @app.route("/api/alerts")
 def get_alerts():
     alerts   = list(_state["alerts"] or [])

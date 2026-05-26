@@ -32,4 +32,5 @@ export const api = {
   leagues:     ()             => get("/api/leagues"),
   setBankroll: (bankroll)     => post("/api/bankroll", { bankroll }),
   refresh:     ()             => post("/api/refresh"),
+  dataSources: ()             => get("/api/data-sources"),
 }

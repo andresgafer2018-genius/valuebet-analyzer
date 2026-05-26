@@ -471,10 +471,10 @@ function FormH2HPanel({ alert, onClose }) {
             letterSpacing:".08em", marginBottom:8 }}>🌤 CLIMA DEL PARTIDO</div>
           {!w.available
             ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                <span style={{ fontSize:11, color:G.text2 }}>Sin datos de clima disponibles</span>
+                <span style={{ fontSize:11, color:G.text2 }}>Activando API...</span>
                 <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
-                  No se pudo obtener el clima para esta liga.<br/>
-                  Factor λ: neutro (1.0)
+                  La key de OpenWeatherMap se activa en ~2hs.<br/>
+                  Factor actual: neutro (1.0)
                 </span>
               </div>
             : <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
@@ -540,18 +540,21 @@ export default function App() {
   const [newBankroll,  setNewBankroll]    = useState("")
   const [showHelp,     setShowHelp]       = useState(false)
   const [expandedRow,  setExpandedRow]    = useState(null)
+  const [dataSources,  setDataSources]    = useState([])
 
   const loadAll = useCallback(async () => {
     try {
       setError(null)
-      const [alertsRes, bkRes, leaguesRes, arbRes] = await Promise.all([
-        api.alerts(), api.bankroll(), api.leagues(), api.arbitrage()
+      const [alertsRes, bkRes, leaguesRes, arbRes, dsRes] = await Promise.all([
+        api.alerts(), api.bankroll(), api.leagues(), api.arbitrage(),
+        api.dataSources().catch(() => ({ sources: [] }))
       ])
       setAlerts(alertsRes.alerts || [])
       setBkData(bkRes)
       setLeagueList(leaguesRes.leagues || [])
       setArbList(arbRes.opportunities || [])
       setBankrollCurve(genBankrollCurve(bkRes.bankroll))
+      setDataSources(dsRes.sources || [])
       setLastUpdate(new Date())
     } catch (e) {
       setError(e.message)
@@ -1102,22 +1105,27 @@ export default function App() {
 
               <Panel title="FUENTES DE DATOS">
                 <div style={{ padding:"14px", display:"flex", flexDirection:"column", gap:10 }}>
-                  {[
-                    { name:"Datos historicos de partidos", status:"✓ Activo",    color:C.green,  detail:"Datos sinteticos generados con distribucion Poisson" },
-                    { name:"The Odds API (cuotas reales)", status:"✕ Pendiente", color:C.text2,  detail:"500 solicitudes/mes en plan gratuito" },
-                    { name:"API-Football (estadisticas)",  status:"✓ Activo",    color:C.green,  detail:"100 solicitudes/dia - partidos reales conectados" },
-                    { name:"OpenWeatherMap (clima)",       status:"✓ Activa",    color:C.green,  detail:"1000 solicitudes/dia en plan gratuito" },
-                  ].map(s => (
-                    <div key={s.name} style={{ display:"flex", alignItems:"center",
-                      justifyContent:"space-between", padding:"10px 0",
-                      borderBottom:`1px solid ${C.border}` }}>
-                      <div>
-                        <div style={{ fontSize:13, fontWeight:500 }}>{s.name}</div>
-                        <div style={{ fontSize:11, color:C.text2, marginTop:3 }}>{s.detail}</div>
-                      </div>
-                      <Badge text={s.status} color={s.color}/>
-                    </div>
-                  ))}
+                  {dataSources.length === 0
+                    ? <div style={{ color:C.text2, fontSize:12 }}>Cargando fuentes...</div>
+                    : dataSources.map(s => {
+                        const color = s.status === "active" ? C.green : s.status === "pending" ? C.amber : C.text2
+                        const icon  = s.status === "active" ? "✓" : s.status === "pending" ? "⟳" : "✕"
+                        return (
+                          <div key={s.name} style={{ display:"flex", alignItems:"center",
+                            justifyContent:"space-between", padding:"10px 0",
+                            borderBottom:`1px solid ${C.border}` }}>
+                            <div>
+                              <div style={{ fontSize:13, fontWeight:500 }}>{s.name}</div>
+                              <div style={{ fontSize:11, color:C.text2, marginTop:3 }}>{s.detail}</div>
+                              {s.matches > 0 && (
+                                <div style={{ fontSize:10, color:C.blue, marginTop:2 }}>{s.matches} partidos cargados</div>
+                              )}
+                            </div>
+                            <Badge text={`${icon} ${s.label}`} color={color}/>
+                          </div>
+                        )
+                      })
+                  }
                   <div style={{ marginTop:4, padding:"10px 12px", background:C.blueDim,
                     border:`1px solid ${C.blue}30`, borderRadius:4, fontSize:12, color:C.text1, lineHeight:1.6 }}>
                     Para activar datos reales de cuotas y estadisticas, completar las API keys en{" "}

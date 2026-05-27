@@ -17,7 +17,7 @@ from flask_cors import CORS
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-from data.fetcher import DataFetcher, ODDS_API_KEY
+from data.fetcher import DataFetcher
 from models.engine import PoissonModel, LogisticModel, ValueBetDetector, ArbitrageDetector, ProbabilityCalibrator
 from database.db import init_db, create_user_settings_table
 from models.retrain import run_retrain_async, get_retrain_status
@@ -101,29 +101,9 @@ def _train_and_analyze():
         # CalibraciÃ³n final
         pred = cal.calibrate(pred)
 
-        odds_list = []
-
-        # ── Intentar cuotas reales de The Odds API ──────────────────────────
-        real_odds = fetcher.get_real_odds_for_match(match_enriched) if ODDS_API_KEY else []
-        if real_odds:
-            for bk in real_odds:
-                # Solo incluir bookmakers con cuotas completas h2h
-                if bk.get("odd_home") and bk.get("odd_away") and bk.get("odd_over25"):
-                    odds_list.append({
-                        "odd_home":         bk["odd_home"],
-                        "odd_draw":         bk.get("odd_draw") or round(3.4, 2),
-                        "odd_away":         bk["odd_away"],
-                        "odd_over25":       bk["odd_over25"],
-                        "odd_under25":      bk.get("odd_under25") or round(1.9, 2),
-                        "bookmaker":        bk["bookmaker_key"],
-                        "bookmaker_name":   bk["bookmaker_name"],
-                        "bookmaker_url":    bk["bookmaker_url"],
-                    })
-
-        # ── Fallback a cuotas simuladas si no hay datos reales ──────────────
-        if not odds_list:
-            sim = fetcher.get_simulated_odds(match)
-            odds_list = [{**sim, "bookmaker_name": "Simulado", "bookmaker_url": ""}]
+        # ── Cuotas simuladas en startup; reales disponibles via /api/refresh ─
+        sim = fetcher.get_simulated_odds(match)
+        odds_list = [{**sim, "bookmaker_name": "Simulado", "bookmaker_url": ""}]
 
         closing_odds = fetcher.get_closing_odds(match, odds_list[0], pred)
         # Enriquecer match con forma y H2H para que lleguen a las alertas
@@ -247,11 +227,68 @@ def bankroll():
                     "max_exposure_pct": 20.0, "active_alerts": len(alerts),
                     "avg_edge": round(sum(a["edge_pct"] for a in alerts)/max(len(alerts),1), 2)})
 
+def _enrich_with_real_odds():
+    """Enriquece las alertas actuales con cuotas reales de The Odds API."""
+    if not _state["alerts"]:
+        return
+    # Agrupar alertas por partido para minimizar llamadas API
+    matches_seen = {}
+    for alert in _state["alerts"]:
+        mid = alert["match_id"]
+        if mid not in matches_seen:
+            matches_seen[mid] = {
+                "home_team": alert["home_team"],
+                "away_team": alert["away_team"],
+                "league":    alert["league"],
+                "match_id":  mid,
+            }
+    # Obtener cuotas reales por partido
+    real_odds_by_match = {}
+    for mid, match in matches_seen.items():
+        try:
+            bk_list = fetcher.get_real_odds_for_match(match)
+            if bk_list:
+                real_odds_by_match[mid] = bk_list
+        except Exception:
+            pass
+    # Actualizar alertas con el mejor bookmaker por mercado
+    market_to_odd = {
+        "1X2_H": "odd_home", "1X2_D": "odd_draw", "1X2_A": "odd_away",
+        "OVER25": "odd_over25", "UNDER25": "odd_under25",
+    }
+    updated = []
+    for alert in _state["alerts"]:
+        mid = alert["match_id"]
+        bk_list = real_odds_by_match.get(mid, [])
+        odd_key = market_to_odd.get(alert["market"])
+        if bk_list and odd_key:
+            best_bk = max(
+                (b for b in bk_list if b.get(odd_key)),
+                key=lambda b: b.get(odd_key, 0),
+                default=None
+            )
+            if best_bk:
+                alert = {**alert,
+                    "bookmaker":      best_bk["bookmaker_key"],
+                    "bookmaker_name": best_bk["bookmaker_name"],
+                    "bookmaker_url":  best_bk["bookmaker_url"],
+                    "odd":            best_bk[odd_key],
+                }
+        updated.append(alert)
+    _state["alerts"] = sorted(updated, key=lambda x: x["edge_pct"], reverse=True)
+    log.info(f"[OddsAPI] Cuotas reales enriquecidas para {len(real_odds_by_match)} partidos")
+
+
 @app.route("/api/refresh", methods=["POST"])
 def refresh():
     _state["alerts"] = None
     _train_and_analyze()
-    return jsonify({"status": "refreshed", "alerts": len(_state["alerts"] or [])})
+    # Enriquecer alertas con cuotas reales si hay ODDS_API_KEY
+    _odds_key = os.getenv("ODDS_API_KEY", "")
+    if _odds_key and _state["alerts"]:
+        _enrich_with_real_odds()
+    return jsonify({"status": "refreshed", "alerts": len(_state["alerts"] or []),
+                    "real_odds": bool(_odds_key)})
 
 @app.route("/api/leagues")
 def get_leagues():

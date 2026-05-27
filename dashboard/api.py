@@ -51,6 +51,133 @@ _state = {
     "bankroll": get_bankroll() if _db_available else float(os.getenv("INITIAL_BANKROLL", "1000")),
 }
 
+def _get_matches_with_real_odds() -> list:
+    """
+    Obtiene partidos FUTUROS de The Odds API con cuotas reales.
+    Solo incluye partidos con al menos 1 hora para apostar.
+    """
+    from datetime import datetime, timezone, timedelta
+    import requests as _req
+
+    odds_key = os.getenv("ODDS_API_KEY", "")
+    if not odds_key:
+        return []
+
+    sport_keys = [
+        "soccer_conmebol_copa_libertadores",
+        "soccer_conmebol_copa_sudamericana",
+        "soccer_brazil_campeonato",
+        "soccer_argentina_primera_division",
+        "soccer_chile_campeonato",
+        "soccer_france_ligue_one",
+        "soccer_uefa_champs_league",
+        "soccer_uefa_europa_league",
+        "soccer_belgium_first_div",
+        "soccer_epl",
+        "soccer_spain_la_liga",
+        "soccer_italy_serie_a",
+        "soccer_germany_bundesliga",
+    ]
+    sport_key_to_league = {
+        "soccer_conmebol_copa_libertadores": "Copa Libertadores",
+        "soccer_conmebol_copa_sudamericana": "Copa Sudamericana",
+        "soccer_brazil_campeonato":          "Brazil Serie A",
+        "soccer_argentina_primera_division": "Liga Argentina",
+        "soccer_chile_campeonato":           "Chile Primera",
+        "soccer_france_ligue_one":           "Ligue 1",
+        "soccer_uefa_champs_league":         "Champions League",
+        "soccer_uefa_europa_league":         "Europa League",
+        "soccer_belgium_first_div":          "Belgium First Div",
+        "soccer_epl":                        "Premier League",
+        "soccer_spain_la_liga":              "La Liga",
+        "soccer_italy_serie_a":              "Serie A",
+        "soccer_germany_bundesliga":         "Bundesliga",
+    }
+    bookmaker_urls = {
+        "bet365": "https://www.bet365.com", "betway": "https://betway.com.ar",
+        "1xbet": "https://1xbet.com", "unibet": "https://www.unibet.com",
+        "pinnacle": "https://www.pinnacle.com", "marathonbet": "https://www.marathonbet.com",
+        "williamhill": "https://www.williamhill.com", "betfair": "https://www.betfair.com",
+        "betsson": "https://www.betsson.com", "sport888": "https://www.888sport.com",
+        "nordicbet": "https://www.nordicbet.com", "betclic": "https://www.betclic.com",
+    }
+    bookmaker_names = {
+        "bet365": "Bet365", "betway": "Betway", "1xbet": "1xBet",
+        "unibet": "Unibet", "pinnacle": "Pinnacle", "marathonbet": "MarathonBet",
+        "williamhill": "William Hill", "betfair": "Betfair", "betsson": "Betsson",
+        "sport888": "888sport", "nordicbet": "NordicBet", "betclic": "Betclic",
+    }
+
+    now = datetime.now(timezone.utc)
+    min_kickoff = now + timedelta(hours=1)
+    matches = []
+
+    for sport_key in sport_keys:
+        try:
+            r = _req.get(
+                f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds",
+                params={"apiKey": odds_key, "regions": "eu", "markets": "h2h,totals", "oddsFormat": "decimal"},
+                timeout=10,
+            )
+            if r.status_code != 200:
+                continue
+            for event in r.json():
+                try:
+                    kickoff = datetime.fromisoformat(event["commence_time"].replace("Z", "+00:00"))
+                except Exception:
+                    continue
+                if kickoff < min_kickoff:
+                    continue
+                home   = event.get("home_team", "")
+                away   = event.get("away_team", "")
+                league = sport_key_to_league.get(sport_key, sport_key)
+                best = {}
+                for bk in event.get("bookmakers", []):
+                    bk_key  = bk.get("key", "")
+                    bk_name = bookmaker_names.get(bk_key, bk.get("title", bk_key))
+                    bk_url  = bookmaker_urls.get(bk_key, f"https://www.google.com/search?q={bk_name}+apuestas")
+                    for market in bk.get("markets", []):
+                        mkey = market.get("key")
+                        outcomes = {o["name"]: o["price"] for o in market.get("outcomes", [])}
+                        if mkey == "h2h":
+                            for team, field in [(home, "odd_home"), ("Draw", "odd_draw"), (away, "odd_away")]:
+                                val = outcomes.get(team)
+                                if val and val > best.get(field, {}).get("odd", 0):
+                                    best[field] = {"odd": val, "bk_key": bk_key, "bk_name": bk_name, "bk_url": bk_url}
+                        elif mkey == "totals":
+                            for o in market.get("outcomes", []):
+                                if o.get("point") == 2.5:
+                                    field = "odd_over25" if o["name"] == "Over" else "odd_under25"
+                                    if o["price"] > best.get(field, {}).get("odd", 0):
+                                        best[field] = {"odd": o["price"], "bk_key": bk_key, "bk_name": bk_name, "bk_url": bk_url}
+                bk_ref = best.get("odd_home") or best.get("odd_over25")
+                if not bk_ref:
+                    continue
+                matches.append({
+                    "home_team": home, "away_team": away,
+                    "match_id":  f"{home}_{away}",
+                    "league":    league,
+                    "kickoff":   event["commence_time"],
+                    "simulated": False,
+                    "real_odds": {
+                        "odd_home":    best.get("odd_home",    {}).get("odd"),
+                        "odd_draw":    best.get("odd_draw",    {}).get("odd") or 3.4,
+                        "odd_away":    best.get("odd_away",    {}).get("odd"),
+                        "odd_over25":  best.get("odd_over25",  {}).get("odd") or 1.9,
+                        "odd_under25": best.get("odd_under25", {}).get("odd") or 1.9,
+                        "bookmaker":      bk_ref["bk_key"],
+                        "bookmaker_name": bk_ref["bk_name"],
+                        "bookmaker_url":  bk_ref["bk_url"],
+                        "best_by_market": best,
+                    },
+                })
+        except Exception as e:
+            log.warning(f"[OddsAPI] Error en {sport_key}: {e}")
+
+    log.info(f"[OddsAPI] {len(matches)} partidos futuros con cuotas reales")
+    return matches
+
+
 def _train_and_analyze():
     global pm, lm, cal, fetcher
     log.info("Entrenando modelos...")
@@ -59,10 +186,8 @@ def _train_and_analyze():
     pm = PoissonModel(); pm.fit(df)
     lm = LogisticModel(); lm.fit(df)
 
-    # CalibraciÃ³n de probabilidades (Platt Scaling)
     cal = ProbabilityCalibrator()
-    proba_list = []
-    results    = []
+    proba_list, results = [], []
     for _, row in df.iterrows():
         if "result" in row and row["result"] in ("H", "D", "A"):
             p = pm.predict_proba(row["home_team"], row["away_team"], row["league"])
@@ -72,17 +197,22 @@ def _train_and_analyze():
 
     det     = ValueBetDetector()
     arb_det = ArbitrageDetector()
-    upcoming = fetcher.get_upcoming_matches()
+
+    # Fuente principal: The Odds API (partidos reales + cuotas)
+    real_matches = _get_matches_with_real_odds()
+    if real_matches:
+        upcoming = real_matches
+        log.info(f"[OddsAPI] Usando {len(upcoming)} partidos reales")
+    else:
+        upcoming = fetcher.get_upcoming_matches()
+        log.info(f"[Fallback] Usando {len(upcoming)} partidos simulados/APISPORTS")
+
     all_alerts, all_preds, arbs = [], [], []
     for match in upcoming:
         pred = pm.predict_proba(match["home_team"], match["away_team"], match["league"])
-
-        # Extraer forma y H2H ya calculados por el Poisson
         form_home = pred.get("form_home", {})
         form_away = pred.get("form_away", {})
         h2h       = pred.get("h2h", {})
-
-        # Mezcla Poisson + LogReg (60/40) con variables adicionales
         pred_lr = lm.predict_proba(
             match["home_team"], match["away_team"],
             pred["lambda_home"], pred["lambda_away"],
@@ -97,23 +227,51 @@ def _train_and_analyze():
             pa = pred["p_away"]*0.6 + pred_lr["lr_p_away"]*0.4
             t  = ph+pd+pa
             pred.update({"p_home": round(ph/t,4), "p_draw": round(pd/t,4), "p_away": round(pa/t,4)})
-
-        # CalibraciÃ³n final
         pred = cal.calibrate(pred)
-
-        # ── Cuotas simuladas en startup; reales disponibles via /api/refresh ─
-        sim = fetcher.get_simulated_odds(match)
-        odds_list = [{**sim, "bookmaker_name": "Simulado", "bookmaker_url": ""}]
-
-        closing_odds = fetcher.get_closing_odds(match, odds_list[0], pred)
-        # Enriquecer match con forma y H2H para que lleguen a las alertas
         match_enriched = {**match, "form_home": form_home, "form_away": form_away, "h2h": h2h}
-        for odds in odds_list:
-            all_alerts.extend(det.detect(pred, odds, match_enriched, closing_odds))
-        arb = arb_det.detect_arb(odds_list)
+        real_odds = match.get("real_odds")
+
+        if real_odds and real_odds.get("odd_home"):
+            best_by_market = real_odds.get("best_by_market", {})
+            closing_base = {
+                "odd_home":    real_odds.get("odd_home"),
+                "odd_draw":    real_odds.get("odd_draw") or 3.4,
+                "odd_away":    real_odds.get("odd_away"),
+                "odd_over25":  real_odds.get("odd_over25") or 1.9,
+                "odd_under25": real_odds.get("odd_under25") or 1.9,
+                "bookmaker":   real_odds["bookmaker"],
+            }
+            closing_odds = fetcher.get_closing_odds(match, closing_base, pred)
+            market_map = {
+                "1X2_H": "odd_home", "1X2_D": "odd_draw", "1X2_A": "odd_away",
+                "OVER25": "odd_over25", "UNDER25": "odd_under25",
+            }
+            for market_id, odd_field in market_map.items():
+                bk_info = best_by_market.get(odd_field)
+                if not bk_info:
+                    continue
+                market_odds = {
+                    **closing_base,
+                    "bookmaker":      bk_info["bk_key"],
+                    "bookmaker_name": bk_info["bk_name"],
+                    "bookmaker_url":  bk_info["bk_url"],
+                }
+                for a in det.detect(pred, market_odds, match_enriched, closing_odds):
+                    if a.get("market") == market_id:
+                        all_alerts.append(a)
+            arb = arb_det.detect_arb([closing_base])
+        else:
+            sim = fetcher.get_simulated_odds(match)
+            odds_list = [{**sim, "bookmaker_name": "Simulado", "bookmaker_url": ""}]
+            closing_odds = fetcher.get_closing_odds(match, odds_list[0], pred)
+            for odds in odds_list:
+                all_alerts.extend(det.detect(pred, odds, match_enriched, closing_odds))
+            arb = arb_det.detect_arb(odds_list)
+
         if arb:
             arbs.append({**arb, "match": f"{match['home_team']} vs {match['away_team']}", "league": match["league"]})
         all_preds.append({**match, **pred})
+
     seen = {}
     for a in sorted(all_alerts, key=lambda x: x["edge_pct"], reverse=True):
         k = f"{a['match_id']}_{a['market']}"

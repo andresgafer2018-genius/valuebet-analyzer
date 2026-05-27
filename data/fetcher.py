@@ -14,14 +14,30 @@ LEAGUE_IDS = {
     "Bundesliga": 78, "Ligue 1": 61, "Champions League": 2, "Liga Argentina": 128,
 }
 ODDS_SPORT_KEYS = {
-    "Premier League": "soccer_epl",
-    "La Liga": "soccer_spain_la_liga",
-    "Serie A": "soccer_italy_serie_a",
-    "Bundesliga": "soccer_germany_bundesliga",
-    "Champions League": "soccer_uefa_champs_league",
-    "Liga Argentina": "soccer_argentina_primera_division",
-    "Brazil Serie A": "soccer_brazil_campeonato",
-    "Chile Primera": "soccer_chile_campeonato",
+    # Ligas disponibles en plan gratuito de The Odds API
+    "Premier League":        "soccer_epl",
+    "La Liga":               "soccer_spain_la_liga",
+    "Serie A":               "soccer_italy_serie_a",
+    "Bundesliga":            "soccer_germany_bundesliga",
+    "Champions League":      "soccer_uefa_champs_league",
+    "Liga Argentina":        "soccer_argentina_primera_division",
+    "Brazil Serie A":        "soccer_brazil_campeonato",
+    "Chile Primera":         "soccer_chile_campeonato",
+    # Ligas confirmadas activas en plan gratuito
+    "Copa Libertadores":     "soccer_conmebol_copa_libertadores",
+    "Copa Sudamericana":     "soccer_conmebol_copa_sudamericana",
+    "Ligue 1":               "soccer_france_ligue_one",
+    "Belgium First Div":     "soccer_belgium_first_div",
+    "Serie B":               "soccer_italy_serie_b",
+    "J League":              "soccer_japan_j_league",
+    "Super League China":    "soccer_china_superleague",
+    "Champions League":      "soccer_uefa_champs_league",
+    "Europa League":         "soccer_uefa_europa_league",
+    "Conference League":     "soccer_uefa_europa_conference_league",
+    "Norway Eliteserien":    "soccer_norway_eliteserien",
+    "Sweden Allsvenskan":    "soccer_sweden_allsvenskan",
+    "Finland Veikkausliiga": "soccer_finland_veikkausliiga",
+    "Ireland Premier":       "soccer_league_of_ireland",
 }
 TEAMS_DB = {}
 
@@ -219,6 +235,17 @@ class DataFetcher:
             # Liga Argentina
             ("Boca Juniors",   "River Plate",       "Liga Argentina"),
             ("Racing Club",    "Independiente",     "Liga Argentina"),
+            # Copa Libertadores (cubierta por The Odds API)
+            ("Boca Juniors",   "Flamengo",          "Copa Libertadores"),
+            ("River Plate",    "Palmeiras",         "Copa Libertadores"),
+            # Copa Sudamericana (cubierta por The Odds API)
+            ("Independiente",  "Santos",            "Copa Sudamericana"),
+            ("Racing Club",    "Nacional",          "Copa Sudamericana"),
+            # Brazil Serie A (cubierta por The Odds API)
+            ("Flamengo",       "Palmeiras",         "Brazil Serie A"),
+            ("Corinthians",    "Sao Paulo",         "Brazil Serie A"),
+            # Chile (cubierta por The Odds API)
+            ("Colo-Colo",      "Universidad de Chile", "Chile Primera"),
         ]
 
         return [

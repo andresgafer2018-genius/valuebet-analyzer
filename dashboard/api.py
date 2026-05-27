@@ -17,7 +17,7 @@ from flask_cors import CORS
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-from data.fetcher import DataFetcher
+from data.fetcher import DataFetcher, ODDS_API_KEY
 from models.engine import PoissonModel, LogisticModel, ValueBetDetector, ArbitrageDetector, ProbabilityCalibrator
 from database.db import init_db, create_user_settings_table
 from models.retrain import run_retrain_async, get_retrain_status
@@ -101,7 +101,30 @@ def _train_and_analyze():
         # CalibraciÃ³n final
         pred = cal.calibrate(pred)
 
-        odds_list = [fetcher.get_simulated_odds(match) for _ in range(3)]
+        odds_list = []
+
+        # ── Intentar cuotas reales de The Odds API ──────────────────────────
+        real_odds = fetcher.get_real_odds_for_match(match_enriched) if ODDS_API_KEY else []
+        if real_odds:
+            for bk in real_odds:
+                # Solo incluir bookmakers con cuotas completas h2h
+                if bk.get("odd_home") and bk.get("odd_away") and bk.get("odd_over25"):
+                    odds_list.append({
+                        "odd_home":         bk["odd_home"],
+                        "odd_draw":         bk.get("odd_draw") or round(3.4, 2),
+                        "odd_away":         bk["odd_away"],
+                        "odd_over25":       bk["odd_over25"],
+                        "odd_under25":      bk.get("odd_under25") or round(1.9, 2),
+                        "bookmaker":        bk["bookmaker_key"],
+                        "bookmaker_name":   bk["bookmaker_name"],
+                        "bookmaker_url":    bk["bookmaker_url"],
+                    })
+
+        # ── Fallback a cuotas simuladas si no hay datos reales ──────────────
+        if not odds_list:
+            sim = fetcher.get_simulated_odds(match)
+            odds_list = [{**sim, "bookmaker_name": "Simulado", "bookmaker_url": ""}]
+
         closing_odds = fetcher.get_closing_odds(match, odds_list[0], pred)
         # Enriquecer match con forma y H2H para que lleguen a las alertas
         match_enriched = {**match, "form_home": form_home, "form_away": form_away, "h2h": h2h}

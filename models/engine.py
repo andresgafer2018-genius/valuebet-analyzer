@@ -645,6 +645,8 @@ class ValueBetDetector:
                     "market":       market_id,
                     "market_label": label,
                     "bookmaker":    odds["bookmaker"],
+                    "bookmaker_name": odds.get("bookmaker_name", odds["bookmaker"]),
+                    "bookmaker_url":  odds.get("bookmaker_url", ""),
                     "odd":          odd,
                     "odd_closing":  odd_closing,
                     "clv_pct":      clv_pct,

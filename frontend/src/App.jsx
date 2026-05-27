@@ -853,8 +853,20 @@ export default function App() {
                             {a.league} · {a.kickoff} · λ {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}
                             {a.bookmaker === "simulated"
                               ? <span title="Cuotas simuladas - partidos reales con cuotas generadas por el modelo" style={{ fontSize:9, color:C.amber, border:`1px solid ${C.amber}40`, borderRadius:2, padding:"0 4px" }}>SIM</span>
-                              : <span title="Datos reales de bookmaker" style={{ fontSize:9, color:C.green, border:`1px solid ${C.green}40`, borderRadius:2, padding:"0 4px" }}>REAL</span>
+                              : <span style={{ fontSize:9, color:C.green, border:`1px solid ${C.green}40`, borderRadius:2, padding:"0 4px" }}>REAL</span>
                             }
+                            {a.bookmaker !== "simulated" && a.bookmaker_name && (
+                              <span style={{ fontSize:9, color:C.text2 }}>
+                                {a.bookmaker_url
+                                  ? <a href={a.bookmaker_url} target="_blank" rel="noopener noreferrer"
+                                      style={{ color:C.blue, textDecoration:"none", fontWeight:600 }}
+                                      title={`Apostar en ${a.bookmaker_name}`}>
+                                      🏠 {a.bookmaker_name} ↗
+                                    </a>
+                                  : <span style={{ color:C.text2 }}>🏠 {a.bookmaker_name}</span>
+                                }
+                              </span>
+                            )}
                           </div>
                         </div>
                         <span style={{ fontSize:12, color:C.text1, overflow:"hidden",

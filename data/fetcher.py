@@ -25,6 +25,43 @@ ODDS_SPORT_KEYS = {
 }
 TEAMS_DB = {}
 
+# Bookmakers EU disponibles en Argentina con sus URLs directas
+BOOKMAKER_URLS = {
+    "bet365":       "https://www.bet365.com",
+    "betway":       "https://betway.com.ar",
+    "1xbet":        "https://1xbet.com",
+    "unibet":       "https://www.unibet.com",
+    "pinnacle":     "https://www.pinnacle.com",
+    "marathonbet":  "https://www.marathonbet.com",
+    "betsafe":      "https://www.betsafe.com",
+    "betclic":      "https://www.betclic.com",
+    "williamhill":  "https://www.williamhill.com",
+    "betfair":      "https://www.betfair.com",
+    "draftkings":   "https://www.draftkings.com",
+    "fanduel":      "https://www.fanduel.com",
+    "betsson":      "https://www.betsson.com",
+    "nordicbet":    "https://www.nordicbet.com",
+    "coolbet":      "https://www.coolbet.com",
+    "casumo":       "https://www.casumo.com",
+    "suprabets":    "https://suprabets.com",
+    "sport888":     "https://www.888sport.com",
+}
+
+BOOKMAKER_DISPLAY = {
+    "bet365":      "Bet365",
+    "betway":      "Betway",
+    "1xbet":       "1xBet",
+    "unibet":      "Unibet",
+    "pinnacle":    "Pinnacle",
+    "marathonbet": "MarathonBet",
+    "betsafe":     "Betsafe",
+    "betclic":     "Betclic",
+    "williamhill": "William Hill",
+    "betfair":     "Betfair",
+    "betsson":     "Betsson",
+    "sport888":    "888sport",
+}
+
 def get_sports():
     r = requests.get(f"{ODDS_BASE}/sports", params={"apiKey": ODDS_API_KEY}, timeout=10)
     r.raise_for_status()
@@ -195,6 +232,96 @@ class DataFetcher:
             }
             for home, away, league in simulated
         ]
+
+    def get_real_odds_for_match(self, match: dict, sport_key: str = None) -> list[dict]:
+        """
+        Busca cuotas reales de The Odds API para un partido específico.
+        Retorna lista de bookmakers con sus cuotas, ordenados por mejor cuota.
+        """
+        if not ODDS_API_KEY:
+            return []
+        try:
+            league = match.get("league", "")
+            sk = sport_key or ODDS_SPORT_KEYS.get(league)
+            if not sk:
+                return []
+
+            r = requests.get(
+                f"{ODDS_BASE}/sports/{sk}/odds",
+                params={
+                    "apiKey": ODDS_API_KEY,
+                    "regions": "eu",
+                    "markets": "h2h,totals",
+                    "oddsFormat": "decimal",
+                },
+                timeout=15,
+            )
+            if r.status_code != 200:
+                return []
+
+            home = match.get("home_team", "").lower()
+            away = match.get("away_team", "").lower()
+            events = r.json()
+            results = []
+
+            for event in events:
+                h = event.get("home_team", "").lower()
+                a = event.get("away_team", "").lower()
+                # Match fuzzy por nombre (primeras 5 letras)
+                if home[:5] not in h and away[:5] not in a:
+                    continue
+                for bk in event.get("bookmakers", []):
+                    bk_key = bk.get("key", "")
+                    bk_name = BOOKMAKER_DISPLAY.get(bk_key, bk.get("title", bk_key))
+                    bk_url  = BOOKMAKER_URLS.get(bk_key, "https://www.google.com/search?q=" + bk_name)
+                    odds_entry = {
+                        "bookmaker_key":  bk_key,
+                        "bookmaker_name": bk_name,
+                        "bookmaker_url":  bk_url,
+                        "odd_home":    None,
+                        "odd_draw":    None,
+                        "odd_away":    None,
+                        "odd_over25":  None,
+                        "odd_under25": None,
+                    }
+                    for market in bk.get("markets", []):
+                        key = market.get("key")
+                        outcomes = {o["name"]: o["price"] for o in market.get("outcomes", [])}
+                        if key == "h2h":
+                            odds_entry["odd_home"] = outcomes.get(event.get("home_team"))
+                            odds_entry["odd_draw"] = outcomes.get("Draw")
+                            odds_entry["odd_away"] = outcomes.get(event.get("away_team"))
+                        elif key == "totals":
+                            for o in market.get("outcomes", []):
+                                if o.get("point") == 2.5:
+                                    if o["name"] == "Over":
+                                        odds_entry["odd_over25"] = o["price"]
+                                    elif o["name"] == "Under":
+                                        odds_entry["odd_under25"] = o["price"]
+                    results.append(odds_entry)
+                break  # Solo el primer evento que matchee
+
+            return results
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"[OddsAPI] Error: {e}")
+            return []
+
+    def get_best_bookmaker(self, match: dict, market: str = "home") -> dict:
+        """
+        Devuelve el bookmaker con la mejor cuota para un mercado específico.
+        market: 'home', 'draw', 'away', 'over25', 'under25'
+        """
+        bookmakers = self.get_real_odds_for_match(match)
+        if not bookmakers:
+            return {}
+        odd_key = f"odd_{market}"
+        best = max(
+            (b for b in bookmakers if b.get(odd_key) is not None),
+            key=lambda b: b.get(odd_key, 0),
+            default={}
+        )
+        return best
 
     def get_simulated_odds(self, match):
         np.random.seed(hash(str(match)) % 2**32)

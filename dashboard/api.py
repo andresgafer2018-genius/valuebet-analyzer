@@ -427,9 +427,9 @@ def _enrich_with_real_odds():
             )
             if best_bk:
                 alert = {**alert,
-                    "bookmaker":      best_bk["bk_key"],
-                    "bookmaker_name": best_bk["bk_name"],
-                    "bookmaker_url":  best_bk["bk_url"],
+                    "bookmaker":      best_bk.get("bookmaker_key") or best_bk.get("bk_key", "simulated"),
+                    "bookmaker_name": best_bk.get("bookmaker_name") or best_bk.get("bk_name", "Bookmaker"),
+                    "bookmaker_url":  best_bk.get("bookmaker_url") or best_bk.get("bk_url", ""),
                     "odd":            best_bk[odd_key],
                 }
         updated.append(alert)

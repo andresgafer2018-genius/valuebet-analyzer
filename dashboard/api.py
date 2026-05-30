@@ -427,9 +427,9 @@ def _enrich_with_real_odds():
             )
             if best_bk:
                 alert = {**alert,
-                    "bookmaker":      best_bk["bookmaker_key"],
-                    "bookmaker_name": best_bk["bookmaker_name"],
-                    "bookmaker_url":  best_bk["bookmaker_url"],
+                    "bookmaker":      best_bk["bk_key"],
+                    "bookmaker_name": best_bk["bk_name"],
+                    "bookmaker_url":  best_bk["bk_url"],
                     "odd":            best_bk[odd_key],
                 }
         updated.append(alert)

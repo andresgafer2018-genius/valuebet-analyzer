@@ -7,7 +7,7 @@ import SportsPanel from './SportsPanel.jsx'
 // src/App.jsx
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5050';
-import { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
          Tooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts"
 import { api } from "./api.js"
@@ -319,9 +319,75 @@ function FormBar({ value, max = 1.4, color }) {
 }
 
 function FormH2HPanel({ alert, onClose }) {
-  const fh  = alert.form_home || {}
-  const fa  = alert.form_away || {}
-  const h2h = alert.h2h || {}
+  const [realData, setRealData] = React.useState(null)
+  const [loadingData, setLoadingData] = React.useState(true)
+  const API = import.meta.env.VITE_API_URL || ""
+
+  React.useEffect(() => {
+    setLoadingData(true)
+    const params = new URLSearchParams({
+      home: alert.home_team || "",
+      away: alert.away_team || "",
+      league: alert.league || "",
+    })
+    if (alert.home_id)   params.set("home_id",   alert.home_id)
+    if (alert.away_id)   params.set("away_id",   alert.away_id)
+    if (alert.league_id) params.set("league_id", alert.league_id)
+
+    fetch(`${API}/api/form-h2h?${params}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.available && data.summary) {
+          // Transformar estructura del endpoint a la que espera el panel
+          const s = data.summary
+          setRealData({
+            fh: {
+              n_matches:       data.form_home?.length || 0,
+              form_factor_att: s.form_home?.win_rate >= 0.6 ? 1.12 : s.form_home?.win_rate <= 0.3 ? 0.88 : 1.0,
+              form_factor_def: s.form_home?.goals_conceded > 0
+                ? Math.max(0.7, 1.2 - (s.form_home.goals_conceded / Math.max(s.form_home.total || 5, 1)) * 0.15)
+                : 1.0,
+              goals_scored_avg: s.form_home?.goals_scored > 0
+                ? (s.form_home.goals_scored / Math.max(data.form_home?.length || 5, 1)).toFixed(1)
+                : "—",
+              win_rate:        s.form_home?.win_rate || 0,
+              form_string:     s.form_home?.form_string || "",
+              fixtures:        data.form_home || [],
+            },
+            fa: {
+              n_matches:       data.form_away?.length || 0,
+              form_factor_att: s.form_away?.win_rate >= 0.6 ? 1.12 : s.form_away?.win_rate <= 0.3 ? 0.88 : 1.0,
+              form_factor_def: s.form_away?.goals_conceded > 0
+                ? Math.max(0.7, 1.2 - (s.form_away.goals_conceded / Math.max(data.form_away?.length || 5, 1)) * 0.15)
+                : 1.0,
+              goals_scored_avg: s.form_away?.goals_scored > 0
+                ? (s.form_away.goals_scored / Math.max(data.form_away?.length || 5, 1)).toFixed(1)
+                : "—",
+              win_rate:        s.form_away?.win_rate || 0,
+              form_string:     s.form_away?.form_string || "",
+              fixtures:        data.form_away || [],
+            },
+            h2h: {
+              n_matches:     s.h2h?.total_matches || 0,
+              home_win_rate: s.h2h?.home_win_rate || 0,
+              draw_rate:     s.h2h?.total_matches > 0
+                ? s.h2h.draws / s.h2h.total_matches
+                : 0,
+              away_win_rate: s.h2h?.away_win_rate || 0,
+              fixtures:      data.h2h || [],
+            },
+          })
+        } else {
+          setRealData(null)
+        }
+        setLoadingData(false)
+      })
+      .catch(() => { setRealData(null); setLoadingData(false) })
+  }, [alert.match_id])
+
+  const fh  = realData?.fh  || alert.form_home || {}
+  const fa  = realData?.fa  || alert.form_away || {}
+  const h2h = realData?.h2h || alert.h2h || {}
   const w   = alert.weather || {}
   const G = { green:"#00d4a0", amber:"#f5a623", red:"#e84040", blue:"#4d9cf5",
     bg1:"#0d0f16", bg2:"#12151f", bg3:"#181c28", border:"#1e2438", text0:"#e8ecf5", text2:"#505872" }
@@ -336,6 +402,9 @@ function FormH2HPanel({ alert, onClose }) {
         <span style={{ fontSize:11, color:G.blue, fontFamily:"'JetBrains Mono',monospace",
           letterSpacing:".08em", fontWeight:700 }}>
           📋 FORMA RECIENTE & H2H - {alert.home_team} vs {alert.away_team}
+          {loadingData && <span style={{ marginLeft:8, fontSize:10, color:G.text2, animation:"spin 1s linear infinite", display:"inline-block" }}>⟳</span>}
+          {!loadingData && realData && <span style={{ marginLeft:8, fontSize:10, color:G.green }}>✓ API-Sports</span>}
+          {!loadingData && !realData && <span style={{ marginLeft:8, fontSize:10, color:G.text2 }}>· datos del modelo</span>}
         </span>
         <button onClick={onClose} style={{ background:"none", border:"none",
           color:G.text2, cursor:"pointer", fontSize:14 }}>✕</button>
@@ -381,6 +450,28 @@ function FormH2HPanel({ alert, onClose }) {
                     n={fh.n_matches}
                   </span>
                 </div>
+                {fh.form_string && (
+                  <div style={{ display:"flex", gap:3, marginTop:6 }}>
+                    {fh.form_string.split("").map((r,i) => (
+                      <span key={i} style={{ width:18, height:18, borderRadius:3, display:"flex",
+                        alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:700,
+                        background: r==="W"?G.green+"30":r==="L"?G.red+"30":G.amber+"30",
+                        color: r==="W"?G.green:r==="L"?G.red:G.amber,
+                        fontFamily:"'JetBrains Mono',monospace" }}>{r}</span>
+                    ))}
+                  </div>
+                )}
+                {fh.fixtures?.length > 0 && (
+                  <div style={{ marginTop:8, display:"flex", flexDirection:"column", gap:3 }}>
+                    {fh.fixtures.slice(0,3).map((f,i) => (
+                      <div key={i} style={{ fontSize:10, color:G.text2, display:"flex", justifyContent:"space-between" }}>
+                        <span style={{ color:G.text0 }}>{f.opponent}</span>
+                        <span style={{ color: f.result==="W"?G.green:f.result==="L"?G.red:G.amber,
+                          fontFamily:"'JetBrains Mono',monospace", fontWeight:700 }}>{f.result} {f.gf}-{f.ga}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
           }
         </div>
@@ -421,6 +512,28 @@ function FormH2HPanel({ alert, onClose }) {
                     n={fa.n_matches}
                   </span>
                 </div>
+                {fa.form_string && (
+                  <div style={{ display:"flex", gap:3, marginTop:6 }}>
+                    {fa.form_string.split("").map((r,i) => (
+                      <span key={i} style={{ width:18, height:18, borderRadius:3, display:"flex",
+                        alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:700,
+                        background: r==="W"?G.green+"30":r==="L"?G.red+"30":G.amber+"30",
+                        color: r==="W"?G.green:r==="L"?G.red:G.amber,
+                        fontFamily:"'JetBrains Mono',monospace" }}>{r}</span>
+                    ))}
+                  </div>
+                )}
+                {fa.fixtures?.length > 0 && (
+                  <div style={{ marginTop:8, display:"flex", flexDirection:"column", gap:3 }}>
+                    {fa.fixtures.slice(0,3).map((f,i) => (
+                      <div key={i} style={{ fontSize:10, color:G.text2, display:"flex", justifyContent:"space-between" }}>
+                        <span style={{ color:G.text0 }}>{f.opponent}</span>
+                        <span style={{ color: f.result==="W"?G.green:f.result==="L"?G.red:G.amber,
+                          fontFamily:"'JetBrains Mono',monospace", fontWeight:700 }}>{f.result} {f.gf}-{f.ga}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
           }
         </div>

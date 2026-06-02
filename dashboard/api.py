@@ -466,6 +466,40 @@ def static_files(path):
 
 
 
+
+@app.route("/api/form-h2h", methods=["GET"])
+def form_h2h():
+    """
+    Retorna datos reales de Forma y H2H para un partido usando API-Sports.
+    Query params: home=<equipo>&away=<equipo>&league=<liga>
+    Opcionalmente: home_id=<id>&away_id=<id>&league_id=<id>
+    """
+    home_team = request.args.get("home", "")
+    away_team = request.args.get("away", "")
+    league    = request.args.get("league", "")
+    home_id   = request.args.get("home_id")
+    away_id   = request.args.get("away_id")
+    league_id = request.args.get("league_id")
+
+    if not home_team or not away_team:
+        return jsonify({"error": "Se requieren parámetros home y away", "available": False}), 400
+
+    match = {
+        "home_team": home_team,
+        "away_team": away_team,
+        "league":    league,
+    }
+    if home_id:   match["home_id"]   = int(home_id)
+    if away_id:   match["away_id"]   = int(away_id)
+    if league_id: match["league_id"] = int(league_id)
+
+    try:
+        result = fetcher.get_form_and_h2h(match)
+        return jsonify(result)
+    except Exception as e:
+        log.error(f"[form-h2h] Error: {e}")
+        return jsonify({"error": str(e), "available": False}), 500
+
 @app.route("/api/retrain", methods=["POST"])
 def trigger_retrain():
     status = get_retrain_status()

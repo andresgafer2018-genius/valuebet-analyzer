@@ -260,6 +260,194 @@ class DataFetcher:
             for home, away, league in simulated
         ]
 
+
+    def get_form_and_h2h(self, match: dict) -> dict:
+        """
+        Obtiene datos reales de Forma y H2H desde API-Sports.
+        Requiere que el match tenga home_id, away_id, league_id
+        (presentes cuando viene de _fixture_to_match).
+        Si faltan IDs, busca el equipo por nombre primero.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+
+        if not APISPORTS_KEY:
+            return {"error": "APISPORTS_KEY no configurada", "available": False}
+
+        home_id   = match.get("home_id")
+        away_id   = match.get("away_id")
+        league_id = match.get("league_id")
+        season    = 2025
+
+        # Si no tenemos IDs, buscar por nombre
+        if not home_id or not away_id:
+            try:
+                home_id   = self._search_team_id(match.get("home_team", ""))
+                away_id   = self._search_team_id(match.get("away_team", ""))
+            except Exception as e:
+                logger.warning(f"[FormH2H] Error buscando IDs: {e}")
+                return {"error": str(e), "available": False}
+
+        if not home_id or not away_id:
+            return {"error": "No se pudieron obtener IDs de equipos", "available": False}
+
+        result = {
+            "available": True,
+            "home_team": match.get("home_team", ""),
+            "away_team": match.get("away_team", ""),
+            "form_home": [],
+            "form_away": [],
+            "h2h":       [],
+        }
+
+        # ── Forma local (últimos 5 partidos) ──────────────────────────────
+        try:
+            r = requests.get(
+                f"{APISPORTS_BASE}/fixtures",
+                headers=_h(),
+                params={"team": home_id, "season": season, "last": 5, "status": "FT"},
+                timeout=15,
+            )
+            if r.status_code == 200:
+                for f in r.json().get("response", []):
+                    result["form_home"].append(self._parse_fixture_result(f, home_id))
+        except Exception as e:
+            logger.warning(f"[FormH2H] forma home error: {e}")
+
+        # ── Forma visitante (últimos 5 partidos) ──────────────────────────
+        try:
+            r = requests.get(
+                f"{APISPORTS_BASE}/fixtures",
+                headers=_h(),
+                params={"team": away_id, "season": season, "last": 5, "status": "FT"},
+                timeout=15,
+            )
+            if r.status_code == 200:
+                for f in r.json().get("response", []):
+                    result["form_away"].append(self._parse_fixture_result(f, away_id))
+        except Exception as e:
+            logger.warning(f"[FormH2H] forma away error: {e}")
+
+        # ── H2H (últimos 5 enfrentamientos directos) ──────────────────────
+        try:
+            r = requests.get(
+                f"{APISPORTS_BASE}/fixtures/headtohead",
+                headers=_h(),
+                params={"h2h": f"{home_id}-{away_id}", "last": 5, "status": "FT"},
+                timeout=15,
+            )
+            if r.status_code == 200:
+                for f in r.json().get("response", []):
+                    result["h2h"].append(self._parse_h2h_fixture(f, home_id, away_id))
+        except Exception as e:
+            logger.warning(f"[FormH2H] h2h error: {e}")
+
+        # ── Stats resumen ──────────────────────────────────────────────────
+        result["summary"] = self._compute_form_summary(result)
+        return result
+
+    def _search_team_id(self, team_name: str) -> int | None:
+        """Busca el ID de un equipo por nombre en API-Sports."""
+        if not team_name:
+            return None
+        r = requests.get(
+            f"{APISPORTS_BASE}/teams",
+            headers=_h(),
+            params={"search": team_name[:20]},
+            timeout=10,
+        )
+        if r.status_code == 200:
+            resp = r.json().get("response", [])
+            if resp:
+                return resp[0]["team"]["id"]
+        return None
+
+    def _parse_fixture_result(self, f: dict, team_id: int) -> dict:
+        """Extrae resultado de un fixture para un equipo específico."""
+        try:
+            home_id    = f["teams"]["home"]["id"]
+            home_name  = f["teams"]["home"]["name"]
+            away_name  = f["teams"]["away"]["name"]
+            home_goals = f["goals"]["home"] or 0
+            away_goals = f["goals"]["away"] or 0
+            is_home    = (home_id == team_id)
+            if is_home:
+                gf, ga, opponent = home_goals, away_goals, away_name
+                result = "W" if home_goals > away_goals else ("D" if home_goals == away_goals else "L")
+            else:
+                gf, ga, opponent = away_goals, home_goals, home_name
+                result = "W" if away_goals > home_goals else ("D" if away_goals == home_goals else "L")
+            return {
+                "date":     f["fixture"]["date"][:10],
+                "opponent": opponent,
+                "home":     is_home,
+                "gf":       gf,
+                "ga":       ga,
+                "result":   result,
+                "score":    f"{home_goals}-{away_goals}",
+            }
+        except Exception:
+            return {}
+
+    def _parse_h2h_fixture(self, f: dict, home_id: int, away_id: int) -> dict:
+        """Extrae datos de un fixture H2H."""
+        try:
+            fh_id      = f["teams"]["home"]["id"]
+            home_name  = f["teams"]["home"]["name"]
+            away_name  = f["teams"]["away"]["name"]
+            home_goals = f["goals"]["home"] or 0
+            away_goals = f["goals"]["away"] or 0
+            # Determinar ganador desde perspectiva del equipo home del partido analizado
+            if fh_id == home_id:
+                result = "HOME_WIN" if home_goals > away_goals else ("DRAW" if home_goals == away_goals else "AWAY_WIN")
+            else:
+                result = "HOME_WIN" if away_goals > home_goals else ("DRAW" if away_goals == home_goals else "AWAY_WIN")
+            return {
+                "date":      f["fixture"]["date"][:10],
+                "home_team": home_name,
+                "away_team": away_name,
+                "score":     f"{home_goals}-{away_goals}",
+                "result":    result,
+                "league":    f["league"]["name"],
+            }
+        except Exception:
+            return {}
+
+    def _compute_form_summary(self, data: dict) -> dict:
+        """Calcula estadísticas resumen de forma y H2H."""
+        def _stats(fixtures):
+            w = sum(1 for f in fixtures if f.get("result") == "W")
+            d = sum(1 for f in fixtures if f.get("result") == "D")
+            l = sum(1 for f in fixtures if f.get("result") == "L")
+            gf = sum(f.get("gf", 0) for f in fixtures)
+            ga = sum(f.get("ga", 0) for f in fixtures)
+            total = max(len(fixtures), 1)
+            return {
+                "wins": w, "draws": d, "losses": l,
+                "goals_scored": gf, "goals_conceded": ga,
+                "win_rate": round(w / total, 2),
+                "form_string": "".join(f.get("result", "?") for f in reversed(fixtures)),
+            }
+
+        h2h_fixtures = data.get("h2h", [])
+        home_wins = sum(1 for h in h2h_fixtures if h.get("result") == "HOME_WIN")
+        draws     = sum(1 for h in h2h_fixtures if h.get("result") == "DRAW")
+        away_wins = sum(1 for h in h2h_fixtures if h.get("result") == "AWAY_WIN")
+        total_h2h = max(len(h2h_fixtures), 1)
+
+        return {
+            "form_home": _stats(data.get("form_home", [])),
+            "form_away": _stats(data.get("form_away", [])),
+            "h2h": {
+                "total_matches": len(h2h_fixtures),
+                "home_wins":  home_wins,
+                "draws":      draws,
+                "away_wins":  away_wins,
+                "home_win_rate": round(home_wins / total_h2h, 2),
+                "away_win_rate": round(away_wins / total_h2h, 2),
+            },
+        }
+
     def get_real_odds_for_match(self, match: dict, sport_key: str = None) -> list[dict]:
         """
         Busca cuotas reales de The Odds API para un partido específico.

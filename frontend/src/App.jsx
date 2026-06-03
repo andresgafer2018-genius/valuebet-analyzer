@@ -390,7 +390,7 @@ function FormH2HPanel({ alert, onClose }) {
   const h2h = realData?.h2h || alert.h2h || {}
   const w   = alert.weather || {}
   const G = { green:"#00d4a0", amber:"#f5a623", red:"#e84040", blue:"#4d9cf5",
-    bg1:"#0d0f16", bg2:"#12151f", bg3:"#181c28", border:"#1e2438", text0:"#e8ecf5", text2:"#505872" }
+    bg1:"#0d0f16", bg2:"#12151f", bg3:"#181c28", border:"#1e2438", text0:"#e8ecf5", text1:"#b0bcd4", text2:"#8a9ab8" }
   const fc = v => v >= 1.05 ? G.green : v <= 0.95 ? G.red : G.amber
   const wf = alert.weather_factor || 1.0
   const wfColor = wf < 0.95 ? G.red : wf < 0.99 ? G.amber : G.green
@@ -399,8 +399,8 @@ function FormH2HPanel({ alert, onClose }) {
     <div style={{ background:G.bg2, border:`1px solid ${G.blue}40`,
       borderTop:`2px solid ${G.blue}`, padding:"14px 16px", animation:"fadeIn .2s ease" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-        <span style={{ fontSize:11, color:G.blue, fontFamily:"'JetBrains Mono',monospace",
-          letterSpacing:".08em", fontWeight:700 }}>
+        <span style={{ fontSize:13, color:G.blue, fontFamily:"'JetBrains Mono',monospace",
+          letterSpacing:".06em", fontWeight:700 }}>
           📋 FORMA RECIENTE & H2H - {alert.home_team} vs {alert.away_team}
           {loadingData && <span style={{ marginLeft:8, fontSize:10, color:G.text2, animation:"spin 1s linear infinite", display:"inline-block" }}>⟳</span>}
           {!loadingData && realData && <span style={{ marginLeft:8, fontSize:10, color:G.green }}>✓ API-Sports</span>}
@@ -414,7 +414,7 @@ function FormH2HPanel({ alert, onClose }) {
         <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
           <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
             letterSpacing:".08em", marginBottom:8 }}>LOCAL - {alert.home_team?.toUpperCase()}</div>
-          {fh.n_matches === 0
+          {(fh.n_matches === 0 && (!fh.fixtures || fh.fixtures.length === 0))
             ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <span style={{ fontSize:11, color:G.text2 }}>Sin historial reciente disponible</span>
                 <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
@@ -479,7 +479,7 @@ function FormH2HPanel({ alert, onClose }) {
         <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
           <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
             letterSpacing:".08em", marginBottom:8 }}>VISITANTE - {alert.away_team?.toUpperCase()}</div>
-          {fa.n_matches === 0
+          {(fa.n_matches === 0 && (!fa.fixtures || fa.fixtures.length === 0))
             ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <span style={{ fontSize:11, color:G.text2 }}>Sin historial reciente disponible</span>
                 <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>

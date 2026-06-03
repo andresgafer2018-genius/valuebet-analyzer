@@ -277,7 +277,7 @@ class DataFetcher:
         home_id   = match.get("home_id")
         away_id   = match.get("away_id")
         league_id = match.get("league_id")
-        season    = 2025
+        season    = 2024
 
         # Si no tenemos IDs, buscar por nombre
         if not home_id or not away_id:

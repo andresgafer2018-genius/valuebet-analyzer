@@ -522,7 +522,7 @@ def debug_apisports():
     try:
         r = req.get("https://v3.football.api-sports.io/fixtures",
             headers={"x-apisports-key": key},
-            params={"team": 486, "season": 2025, "last": 3, "status": "FT"},
+            params={"team": 486, "season": 2024, "last": 3, "status": "FT"},
             timeout=15)
         return jsonify({"status": r.status_code, "key_prefix": key[:8], "response": r.json()})
     except Exception as e:

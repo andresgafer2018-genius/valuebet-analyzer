@@ -272,10 +272,24 @@ def _train_and_analyze():
             arbs.append({**arb, "match": f"{match['home_team']} vs {match['away_team']}", "league": match["league"]})
         all_preds.append({**match, **pred})
 
+    match_ids_index = {}
+    for m in upcoming:
+        mid = m.get("match_id") or f"{m['home_team']}_{m['away_team']}"
+        match_ids_index[mid] = {
+            "home_id":   m.get("home_id"),
+            "away_id":   m.get("away_id"),
+            "league_id": m.get("league_id"),
+        }
+
     seen = {}
     for a in sorted(all_alerts, key=lambda x: x["edge_pct"], reverse=True):
         k = f"{a['match_id']}_{a['market']}"
-        if k not in seen: seen[k] = a
+        if k not in seen:
+            ids = match_ids_index.get(a["match_id"], {})
+            if ids.get("home_id"):   a["home_id"]   = ids["home_id"]
+            if ids.get("away_id"):   a["away_id"]   = ids["away_id"]
+            if ids.get("league_id"): a["league_id"] = ids["league_id"]
+            seen[k] = a
     _state["alerts"]      = sorted(seen.values(), key=lambda x: x["edge_pct"], reverse=True)
     _state["predictions"] = all_preds
     _state["arb"]         = arbs

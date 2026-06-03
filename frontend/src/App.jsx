@@ -972,11 +972,11 @@ export default function App() {
                               <span style={{ fontSize:9, color:C.text2 }}>
                                 {a.bookmaker_url
                                   ? <a href={a.bookmaker_url} target="_blank" rel="noopener noreferrer"
-                                      style={{ color:C.blue, textDecoration:"none", fontWeight:600 }}
+                                      style={{ color:"#7dd3fc", textDecoration:"none", fontWeight:700, fontSize:12, background:"#0ea5e920", border:"1px solid #0ea5e940", borderRadius:4, padding:"1px 7px" }}
                                       title={`Apostar en ${a.bookmaker_name}`}>
                                       🏠 {a.bookmaker_name} ↗
                                     </a>
-                                  : <span style={{ color:C.text2 }}>🏠 {a.bookmaker_name}</span>
+                                  : <span style={{ color:"#7dd3fc", fontWeight:700, fontSize:12, background:"#0ea5e920", border:"1px solid #0ea5e940", borderRadius:4, padding:"1px 7px" }}>{a.bookmaker_name}</span>
                                 }
                               </span>
                             )}

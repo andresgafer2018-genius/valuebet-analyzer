@@ -201,8 +201,12 @@ def _train_and_analyze():
     # Fuente principal: The Odds API (partidos reales + cuotas)
     real_matches = _get_matches_with_real_odds()
     if real_matches:
-        upcoming = real_matches
-        log.info(f"[OddsAPI] Usando {len(upcoming)} partidos reales")
+        # Completar con simulados para ligas ausentes en The Odds API
+        real_leagues = {m["league"] for m in real_matches}
+        simulated_all = fetcher._get_simulated_matches()
+        extras = [m for m in simulated_all if m["league"] not in real_leagues]
+        upcoming = real_matches + extras
+        log.info(f"[OddsAPI] {len(real_matches)} reales + {len(extras)} simulados para ligas faltantes")
     else:
         upcoming = fetcher.get_upcoming_matches()
         log.info(f"[Fallback] Usando {len(upcoming)} partidos simulados/APISPORTS")

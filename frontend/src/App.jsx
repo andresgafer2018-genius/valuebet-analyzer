@@ -16,7 +16,7 @@ import { api } from "./api.js"
 const C = {
   bg0:"#08090d", bg1:"#0d0f16", bg2:"#12151f", bg3:"#181c28",
   border:"#1e2438", border2:"#252c40",
-  text0:"#e8ecf5", text1:"#8b93ab", text2:"#505872",
+  text0:"#f0f4ff", text1:"#a8b4cc", text2:"#7a8aaa",
   green:"#00d4a0", greenDim:"#00d4a018",
   amber:"#f5a623", amberDim:"#f5a62312",
   red:"#e84040",   blue:"#4d9cf5",  blueDim:"#4d9cf512",
@@ -73,7 +73,7 @@ function Panel({ children, style, title, action }) {
 function Stat({ label, value, sub, color = C.text0 }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-      <span style={{ fontSize:11, color:C.text2, letterSpacing:".06em", textTransform:"uppercase",
+      <span style={{ fontSize:12, color:C.text2, letterSpacing:".04em", textTransform:"uppercase",
         fontFamily:"'JetBrains Mono',monospace" }}>{label}</span>
       <span style={{ fontSize:26, fontWeight:700, color, fontFamily:"'JetBrains Mono',monospace", lineHeight:1 }}>
         {value}
@@ -412,12 +412,12 @@ function FormH2HPanel({ alert, onClose }) {
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:12 }}>
         {/* Forma Local */}
         <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
-          <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
-            letterSpacing:".08em", marginBottom:8 }}>LOCAL - {alert.home_team?.toUpperCase()}</div>
+          <div style={{ fontSize:12, color:"#7a8aaa", fontFamily:"'JetBrains Mono',monospace",
+            letterSpacing:".06em", marginBottom:10 }}>LOCAL - {alert.home_team?.toUpperCase()}</div>
           {(fh.n_matches === 0 && (!fh.fixtures || fh.fixtures.length === 0))
             ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                <span style={{ fontSize:11, color:G.text2 }}>Sin historial reciente disponible</span>
-                <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
+                <span style={{ fontSize:13, color:"#7a8aaa" }}>Sin historial reciente disponible</span>
+                <span style={{ fontSize:12, color:"#7a8aaa", lineHeight:1.6 }}>
                   El modelo usa valores neutros (factor=1.0).<br/>
                   Activa APISPORTS_KEY para obtener forma real.
                 </span>
@@ -477,12 +477,12 @@ function FormH2HPanel({ alert, onClose }) {
         </div>
         {/* Forma Visitante */}
         <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
-          <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
-            letterSpacing:".08em", marginBottom:8 }}>VISITANTE - {alert.away_team?.toUpperCase()}</div>
+          <div style={{ fontSize:12, color:"#7a8aaa", fontFamily:"'JetBrains Mono',monospace",
+            letterSpacing:".06em", marginBottom:10 }}>VISITANTE - {alert.away_team?.toUpperCase()}</div>
           {(fa.n_matches === 0 && (!fa.fixtures || fa.fixtures.length === 0))
             ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                <span style={{ fontSize:11, color:G.text2 }}>Sin historial reciente disponible</span>
-                <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
+                <span style={{ fontSize:13, color:"#7a8aaa" }}>Sin historial reciente disponible</span>
+                <span style={{ fontSize:12, color:"#7a8aaa", lineHeight:1.6 }}>
                   El modelo usa valores neutros (factor=1.0).<br/>
                   Activa APISPORTS_KEY para obtener forma real.
                 </span>
@@ -539,12 +539,12 @@ function FormH2HPanel({ alert, onClose }) {
         </div>
         {/* H2H */}
         <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
-          <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
-            letterSpacing:".08em", marginBottom:8 }}>H2H - HISTORIAL DIRECTO</div>
+          <div style={{ fontSize:12, color:"#7a8aaa", fontFamily:"'JetBrains Mono',monospace",
+            letterSpacing:".06em", marginBottom:10 }}>H2H - HISTORIAL DIRECTO</div>
           {h2h.n_matches === 0
             ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <span style={{ fontSize:11, color:G.text2 }}>Sin enfrentamientos directos en el historial</span>
-                <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
+                <span style={{ fontSize:12, color:"#7a8aaa", lineHeight:1.6 }}>
                   Se asume bias neutro (50/50).<br/>
                   Con APISPORTS_KEY se calcularan los H2H reales.
                 </span>
@@ -580,12 +580,12 @@ function FormH2HPanel({ alert, onClose }) {
         </div>
         {/* Clima */}
         <div style={{ background:G.bg3, border:`1px solid ${G.border}`, borderRadius:5, padding:"10px 12px" }}>
-          <div style={{ fontSize:10, color:G.text2, fontFamily:"'JetBrains Mono',monospace",
-            letterSpacing:".08em", marginBottom:8 }}>🌤 CLIMA DEL PARTIDO</div>
+          <div style={{ fontSize:12, color:"#7a8aaa", fontFamily:"'JetBrains Mono',monospace",
+            letterSpacing:".06em", marginBottom:10 }}>🌤 CLIMA DEL PARTIDO</div>
           {!w.available
             ? <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 <span style={{ fontSize:11, color:G.text2 }}>Activando API...</span>
-                <span style={{ fontSize:10, color:G.text2, lineHeight:1.5 }}>
+                <span style={{ fontSize:12, color:"#7a8aaa", lineHeight:1.6 }}>
                   La key de OpenWeatherMap se activa en ~2hs.<br/>
                   Factor actual: neutro (1.0)
                 </span>
@@ -733,7 +733,7 @@ export default function App() {
 
   return (
     <div style={{ background:C.bg0, minHeight:"100vh", color:C.text0,
-      fontFamily:"'DM Sans',sans-serif", fontSize:14 }}>
+      fontFamily:"'DM Sans',sans-serif", fontSize:15 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;600&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
@@ -745,7 +745,7 @@ export default function App() {
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
         .alert-row:hover{background:${C.bg3} !important;cursor:pointer}
-        .tab-btn{background:none;border:none;cursor:pointer;transition:color .15s;padding:10px 16px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px}
+        .tab-btn{background:none;border:none;cursor:pointer;transition:color .15s;padding:10px 18px;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px}
         .sel{background:${C.bg3};border:1px solid ${C.border};color:${C.text1};border-radius:4px;padding:5px 10px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none}
         .btn{background:none;border:1px solid ${C.border2};color:${C.text1};border-radius:4px;padding:5px 12px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s}
         .btn:hover{background:${C.bg3};color:${C.text0}}
@@ -914,7 +914,7 @@ export default function App() {
                   { h:"STAKE",    tip:"Monto sugerido a apostar en $ segun tu bankroll y el criterio de Kelly" },
                   { h:"% / INFO", tip:"% del bankroll total sugerido por Kelly. Clic en info para ver forma reciente y H2H" },
                 ].map(({h,tip},i)=>(
-                  <span key={i} title={tip} style={{ fontSize:10, color:C.text2,
+                  <span key={i} title={tip} style={{ fontSize:11, color:C.text2,
                     fontFamily:"'JetBrains Mono',monospace", letterSpacing:".06em",
                     cursor: tip ? "help" : "default",
                     borderBottom: tip ? `1px dotted ${C.text2}40` : "none" }}>{h}</span>
@@ -957,12 +957,12 @@ export default function App() {
                         <div style={{ minWidth:0 }}>
                           <div style={{ display:"flex", alignItems:"center", gap:5, overflow:"hidden" }}>
                             <span style={{ fontSize:13, flexShrink:0 }}>{leagueIcon(a.league)}</span>
-                            <span style={{ fontSize:13, fontWeight:600, whiteSpace:"nowrap",
+                            <span style={{ fontSize:14, fontWeight:600, whiteSpace:"nowrap",
                               overflow:"hidden", textOverflow:"ellipsis" }}>
                               {a.home_team} <span style={{color:C.text2, fontWeight:400}}>vs</span> {a.away_team}
                             </span>
                           </div>
-                          <div style={{ fontSize:11, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginTop:2, display:"flex", alignItems:"center", gap:6 }}>
+                          <div style={{ fontSize:12, color:C.text2, fontFamily:"'JetBrains Mono',monospace", marginTop:2, display:"flex", alignItems:"center", gap:6 }}>
                             {a.league} · {a.kickoff} · λ {a.lambda_home?.toFixed(2)}/{a.lambda_away?.toFixed(2)}
                             {a.bookmaker === "simulated"
                               ? <span title="Cuotas simuladas - partidos reales con cuotas generadas por el modelo" style={{ fontSize:9, color:C.amber, border:`1px solid ${C.amber}40`, borderRadius:2, padding:"0 4px" }}>SIM</span>
@@ -982,7 +982,7 @@ export default function App() {
                             )}
                           </div>
                         </div>
-                        <span style={{ fontSize:12, color:C.text1, overflow:"hidden",
+                        <span style={{ fontSize:13, color:C.text1, overflow:"hidden",
                           textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                           {a.market_label || a.market}
                         </span>

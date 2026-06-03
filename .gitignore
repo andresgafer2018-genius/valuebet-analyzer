@@ -10,3 +10,5 @@ static/
 .env
 
 desktop/node_modules/
+
+desktop/dist/

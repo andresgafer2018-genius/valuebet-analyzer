@@ -512,6 +512,22 @@ def trigger_retrain():
 def retrain_status():
     return jsonify(get_retrain_status())
 
+
+@app.route("/api/debug-apisports", methods=["GET"])
+def debug_apisports():
+    import os, requests as req
+    key = os.getenv("APISPORTS_KEY", "")
+    if not key:
+        return jsonify({"error": "KEY no configurada", "key_len": 0})
+    try:
+        r = req.get("https://v3.football.api-sports.io/fixtures",
+            headers={"x-apisports-key": key},
+            params={"team": 486, "season": 2025, "last": 3, "status": "FT"},
+            timeout=15)
+        return jsonify({"status": r.status_code, "key_prefix": key[:8], "response": r.json()})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 if __name__ == "__main__":
     import threading, webbrowser
     port = int(os.getenv("PORT", 5050))

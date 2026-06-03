@@ -1,0 +1,401 @@
+,match_id,date,league,home_team,away_team,home_goals,away_goals,lambda_home,lambda_away,home_elo,away_elo,result,total_goals,over25
+0,SYN_00000,2025-12-17,Liga Argentina,Independiente,Racing Club,3,1,1.159,1.159,1630,1680,H,4,1
+1,SYN_00001,2025-12-22,La Liga,Athletic Bilbao,Real Madrid,3,3,0.816,1.459,1720,1970,D,6,1
+2,SYN_00002,2024-08-05,Liga Argentina,Boca Juniors,San Lorenzo,1,0,1.569,0.855,1720,1645,H,1,0
+3,SYN_00003,2024-09-26,La Liga,Atletico Madrid,Barcelona,1,3,1.026,0.958,1880,1940,A,4,1
+4,SYN_00004,2025-05-10,Premier League,Chelsea,Tottenham,1,1,1.456,1.066,1830,1790,D,2,0
+5,SYN_00005,2023-09-14,Liga Argentina,Boca Juniors,River Plate,2,2,1.212,1.163,1720,1755,D,4,1
+6,SYN_00006,2025-01-16,Liga Argentina,Independiente,Boca Juniors,1,3,1.049,1.283,1630,1720,A,4,1
+7,SYN_00007,2024-03-24,La Liga,Athletic Bilbao,Villarreal,1,0,1.197,0.943,1720,1730,H,1,0
+8,SYN_00008,2026-03-01,Premier League,Manchester City,Arsenal,0,1,1.392,0.87,1950,1890,A,1,0
+9,SYN_00009,2025-10-01,Premier League,Manchester City,Chelsea,1,3,1.74,0.725,1950,1830,A,4,1
+10,SYN_00010,2025-10-22,La Liga,Athletic Bilbao,Barcelona,1,1,0.87,1.368,1720,1940,D,2,0
+11,SYN_00011,2023-10-05,Premier League,Liverpool,Arsenal,1,0,1.332,1.057,1920,1890,H,1,0
+12,SYN_00012,2024-09-24,Premier League,Arsenal,Manchester City,0,0,1.112,1.089,1890,1950,D,0,0
+13,SYN_00013,2024-04-19,Premier League,Newcastle,Chelsea,2,1,1.211,1.036,1760,1830,H,3,1
+14,SYN_00014,2023-06-17,Liga Argentina,Independiente,San Lorenzo,2,0,1.214,1.035,1630,1645,H,2,0
+15,SYN_00015,2024-07-17,Premier League,Newcastle,Liverpool,0,1,1.029,1.303,1760,1920,A,1,0
+16,SYN_00016,2025-01-05,Premier League,Newcastle,Tottenham,2,1,1.332,1.066,1760,1790,H,3,1
+17,SYN_00017,2026-02-18,La Liga,Atletico Madrid,Real Madrid,2,1,0.962,1.022,1880,1970,H,3,1
+18,SYN_00018,2026-01-04,Premier League,Arsenal,Chelsea,3,0,1.589,0.829,1890,1830,H,3,1
+19,SYN_00019,2025-11-04,Premier League,Chelsea,Manchester City,1,1,0.927,1.362,1830,1950,D,2,0
+20,SYN_00020,2024-02-25,Liga Argentina,River Plate,San Lorenzo,1,0,1.72,0.765,1755,1645,H,1,0
+21,SYN_00021,2025-06-20,Premier League,Tottenham,Liverpool,3,1,1.158,1.433,1790,1920,H,4,1
+22,SYN_00022,2024-02-17,La Liga,Real Sociedad,Barcelona,0,4,0.932,1.437,1740,1940,A,4,1
+23,SYN_00023,2026-01-11,Liga Argentina,Racing Club,River Plate,2,0,1.095,1.285,1680,1755,H,2,0
+24,SYN_00024,2023-06-10,Liga Argentina,Racing Club,Independiente,3,1,1.481,0.907,1680,1630,H,4,1
+25,SYN_00025,2026-04-17,La Liga,Real Sociedad,Villarreal,2,3,1.282,0.99,1740,1730,A,5,1
+26,SYN_00026,2023-08-05,Premier League,Chelsea,Liverpool,0,1,1.125,1.303,1830,1920,A,1,0
+27,SYN_00027,2026-04-24,La Liga,Real Madrid,Athletic Bilbao,3,1,1.865,0.639,1970,1720,H,4,1
+28,SYN_00028,2024-10-02,La Liga,Atletico Madrid,Barcelona,1,1,1.026,0.958,1880,1940,D,2,0
+29,SYN_00029,2025-05-23,Liga Argentina,Independiente,Boca Juniors,0,1,1.049,1.283,1630,1720,A,1,0
+30,SYN_00030,2023-12-26,La Liga,Villarreal,Barcelona,1,1,0.964,1.505,1730,1940,D,2,0
+31,SYN_00031,2024-11-22,La Liga,Real Madrid,Barcelona,4,0,1.492,1.026,1970,1940,H,4,1
+32,SYN_00032,2023-07-07,Premier League,Liverpool,Chelsea,1,1,1.664,0.881,1920,1830,D,2,0
+33,SYN_00033,2024-03-19,Liga Argentina,River Plate,Boca Juniors,3,0,1.486,0.949,1755,1720,H,3,1
+34,SYN_00034,2025-10-10,La Liga,Real Madrid,Barcelona,1,2,1.492,1.026,1970,1940,A,3,1
+35,SYN_00035,2023-07-11,La Liga,Villarreal,Atletico Madrid,0,3,0.843,1.104,1730,1880,A,3,1
+36,SYN_00036,2025-02-15,Liga Argentina,Independiente,Boca Juniors,4,1,1.049,1.283,1630,1720,H,5,1
+37,SYN_00037,2023-05-29,Liga Argentina,Boca Juniors,Racing Club,1,1,1.497,0.958,1720,1680,D,2,0
+38,SYN_00038,2023-07-31,Liga Argentina,Estudiantes,San Lorenzo,3,1,1.164,0.9,1620,1645,H,4,1
+39,SYN_00039,2024-04-10,Liga Argentina,Estudiantes,Racing Club,2,0,1.111,1.008,1620,1680,H,2,0
+40,SYN_00040,2025-01-08,Liga Argentina,Boca Juniors,San Lorenzo,1,2,1.569,0.855,1720,1645,A,3,1
+41,SYN_00041,2023-08-02,Liga Argentina,Racing Club,River Plate,0,1,1.095,1.285,1680,1755,A,1,0
+42,SYN_00042,2025-06-22,Liga Argentina,San Lorenzo,Racing Club,2,2,1.208,1.109,1645,1680,D,4,1
+43,SYN_00043,2025-08-13,Premier League,Tottenham,Chelsea,1,1,1.362,1.14,1790,1830,D,2,0
+44,SYN_00044,2025-12-08,La Liga,Real Sociedad,Real Madrid,0,2,0.874,1.532,1740,1970,A,2,0
+45,SYN_00045,2026-03-13,Liga Argentina,Racing Club,San Lorenzo,2,0,1.417,0.945,1680,1645,H,2,0
+46,SYN_00046,2024-04-23,Premier League,Newcastle,Arsenal,2,0,0.968,1.243,1760,1890,H,2,0
+47,SYN_00047,2023-08-31,Liga Argentina,Estudiantes,Independiente,0,3,1.217,0.864,1620,1630,A,3,1
+48,SYN_00048,2024-03-28,La Liga,Barcelona,Real Sociedad,3,2,1.836,0.73,1940,1740,H,5,1
+49,SYN_00049,2023-08-20,La Liga,Real Madrid,Villarreal,4,0,2.051,0.707,1970,1730,H,4,1
+50,SYN_00050,2026-03-21,Premier League,Tottenham,Manchester City,0,2,0.953,1.498,1790,1950,A,2,0
+51,SYN_00051,2024-06-29,Premier League,Tottenham,Manchester City,2,0,0.953,1.498,1790,1950,H,2,0
+52,SYN_00052,2024-07-28,La Liga,Real Madrid,Athletic Bilbao,4,0,1.865,0.639,1970,1720,H,4,1
+53,SYN_00053,2025-02-05,Liga Argentina,San Lorenzo,River Plate,1,1,0.977,1.346,1645,1755,D,2,0
+54,SYN_00054,2025-01-20,Premier League,Manchester City,Arsenal,1,0,1.392,0.87,1950,1890,H,1,0
+55,SYN_00055,2023-12-22,La Liga,Atletico Madrid,Real Madrid,1,1,0.962,1.022,1880,1970,D,2,0
+56,SYN_00056,2025-03-01,La Liga,Atletico Madrid,Villarreal,2,0,1.41,0.66,1880,1730,H,2,0
+57,SYN_00057,2024-10-26,La Liga,Real Madrid,Villarreal,2,0,2.051,0.707,1970,1730,H,2,0
+58,SYN_00058,2024-10-24,Liga Argentina,River Plate,Independiente,2,0,1.799,0.734,1755,1630,H,2,0
+59,SYN_00059,2024-01-28,La Liga,Atletico Madrid,Real Sociedad,2,3,1.346,0.639,1880,1740,A,5,1
+60,SYN_00060,2023-05-20,Liga Argentina,Racing Club,River Plate,1,0,1.095,1.285,1680,1755,H,1,0
+61,SYN_00061,2026-01-11,Premier League,Liverpool,Tottenham,0,1,1.831,0.906,1920,1790,A,1,0
+62,SYN_00062,2024-07-24,Premier League,Tottenham,Manchester City,0,2,0.953,1.498,1790,1950,A,2,0
+63,SYN_00063,2024-08-22,Liga Argentina,Racing Club,Independiente,0,0,1.481,0.907,1680,1630,D,0,0
+64,SYN_00064,2024-02-09,Premier League,Manchester City,Chelsea,3,0,1.74,0.725,1950,1830,H,3,1
+65,SYN_00065,2023-07-17,Liga Argentina,Racing Club,River Plate,4,3,1.095,1.285,1680,1755,H,7,1
+66,SYN_00066,2024-01-11,Liga Argentina,Boca Juniors,River Plate,1,1,1.212,1.163,1720,1755,D,2,0
+67,SYN_00067,2024-10-13,La Liga,Barcelona,Real Madrid,0,0,1.311,1.168,1940,1970,D,0,0
+68,SYN_00068,2023-05-12,La Liga,Real Sociedad,Real Madrid,1,0,0.874,1.532,1740,1970,H,1,0
+69,SYN_00069,2024-10-20,Liga Argentina,Independiente,River Plate,2,1,0.938,1.408,1630,1755,H,3,1
+70,SYN_00070,2024-07-16,Premier League,Manchester City,Liverpool,2,1,1.479,0.912,1950,1920,H,3,1
+71,SYN_00071,2026-04-14,Premier League,Newcastle,Tottenham,0,5,1.332,1.066,1760,1790,A,5,1
+72,SYN_00072,2023-08-02,Liga Argentina,San Lorenzo,Independiente,1,0,1.322,0.95,1645,1630,H,1,0
+73,SYN_00073,2026-04-23,Premier League,Tottenham,Newcastle,1,2,1.362,1.042,1790,1760,A,3,1
+74,SYN_00074,2026-02-09,Liga Argentina,Boca Juniors,San Lorenzo,2,3,1.569,0.855,1720,1645,A,5,1
+75,SYN_00075,2025-10-09,La Liga,Real Madrid,Real Sociedad,3,3,1.958,0.684,1970,1740,D,6,1
+76,SYN_00076,2025-02-28,Liga Argentina,Boca Juniors,Racing Club,2,2,1.497,0.958,1720,1680,D,4,1
+77,SYN_00077,2025-02-06,La Liga,Athletic Bilbao,Barcelona,0,0,0.87,1.368,1720,1940,D,0,0
+78,SYN_00078,2026-02-26,Premier League,Tottenham,Manchester City,0,3,0.953,1.498,1790,1950,A,3,1
+79,SYN_00079,2024-08-30,Liga Argentina,River Plate,Estudiantes,1,0,1.564,0.704,1755,1620,H,1,0
+80,SYN_00080,2023-10-13,La Liga,Athletic Bilbao,Barcelona,0,1,0.87,1.368,1720,1940,A,1,0
+81,SYN_00081,2024-02-09,Premier League,Liverpool,Newcastle,1,1,1.664,0.805,1920,1760,D,2,0
+82,SYN_00082,2024-08-18,Premier League,Arsenal,Newcastle,0,2,1.589,0.758,1890,1760,A,2,0
+83,SYN_00083,2025-01-14,Liga Argentina,Independiente,Boca Juniors,1,1,1.049,1.283,1630,1720,D,2,0
+84,SYN_00084,2025-04-24,Liga Argentina,Estudiantes,Racing Club,0,1,1.111,1.008,1620,1680,A,1,0
+85,SYN_00085,2025-08-26,Liga Argentina,Boca Juniors,Racing Club,2,0,1.497,0.958,1720,1680,H,2,0
+86,SYN_00086,2023-09-29,Premier League,Chelsea,Tottenham,1,3,1.456,1.066,1830,1790,A,4,1
+87,SYN_00087,2024-07-23,La Liga,Villarreal,Barcelona,0,3,0.964,1.505,1730,1940,A,3,1
+88,SYN_00088,2023-05-14,La Liga,Real Sociedad,Athletic Bilbao,0,0,1.166,0.894,1740,1720,D,0,0
+89,SYN_00089,2024-07-03,La Liga,Athletic Bilbao,Real Madrid,1,3,0.816,1.459,1720,1970,A,4,1
+90,SYN_00090,2024-01-07,Premier League,Newcastle,Liverpool,1,1,1.029,1.303,1760,1920,D,2,0
+91,SYN_00091,2025-03-29,Premier League,Arsenal,Liverpool,2,1,1.35,1.042,1890,1920,H,3,1
+92,SYN_00092,2023-09-14,Premier League,Liverpool,Arsenal,1,1,1.332,1.057,1920,1890,D,2,0
+93,SYN_00093,2024-07-15,Liga Argentina,Racing Club,Independiente,1,2,1.481,0.907,1680,1630,A,3,1
+94,SYN_00094,2023-05-20,Liga Argentina,San Lorenzo,Racing Club,1,1,1.208,1.109,1645,1680,D,2,0
+95,SYN_00095,2023-09-23,La Liga,Barcelona,Atletico Madrid,0,0,1.224,0.803,1940,1880,D,0,0
+96,SYN_00096,2025-08-20,Liga Argentina,Independiente,San Lorenzo,2,1,1.214,1.035,1630,1645,H,3,1
+97,SYN_00097,2023-05-12,Premier League,Newcastle,Arsenal,3,2,0.968,1.243,1760,1890,H,5,1
+98,SYN_00098,2023-11-12,Premier League,Arsenal,Manchester City,2,2,1.112,1.089,1890,1950,D,4,1
+99,SYN_00099,2025-02-19,Premier League,Arsenal,Manchester City,1,2,1.112,1.089,1890,1950,A,3,1
+100,SYN_00100,2024-03-08,La Liga,Real Sociedad,Atletico Madrid,2,4,0.816,1.054,1740,1880,A,6,1
+101,SYN_00101,2025-06-20,Liga Argentina,River Plate,Boca Juniors,3,1,1.486,0.949,1755,1720,H,4,1
+102,SYN_00102,2025-01-28,La Liga,Real Madrid,Villarreal,0,0,2.051,0.707,1970,1730,D,0,0
+103,SYN_00103,2023-10-30,Liga Argentina,San Lorenzo,River Plate,1,0,0.977,1.346,1645,1755,H,1,0
+104,SYN_00104,2025-12-19,La Liga,Real Sociedad,Villarreal,3,1,1.282,0.99,1740,1730,H,4,1
+105,SYN_00105,2025-01-07,La Liga,Real Sociedad,Atletico Madrid,1,2,0.816,1.054,1740,1880,A,3,1
+106,SYN_00106,2024-12-16,Liga Argentina,Estudiantes,Racing Club,0,2,1.111,1.008,1620,1680,A,2,0
+107,SYN_00107,2025-09-16,Premier League,Arsenal,Manchester City,2,2,1.112,1.089,1890,1950,D,4,1
+108,SYN_00108,2024-06-23,Liga Argentina,River Plate,San Lorenzo,2,0,1.72,0.765,1755,1645,H,2,0
+109,SYN_00109,2025-05-23,La Liga,Athletic Bilbao,Atletico Madrid,1,0,0.761,1.003,1720,1880,H,1,0
+110,SYN_00110,2025-02-09,La Liga,Athletic Bilbao,Barcelona,0,1,0.87,1.368,1720,1940,A,1,0
+111,SYN_00111,2025-10-10,Premier League,Manchester City,Arsenal,3,0,1.392,0.87,1950,1890,H,3,1
+112,SYN_00112,2023-08-23,Premier League,Arsenal,Manchester City,2,2,1.112,1.089,1890,1950,D,4,1
+113,SYN_00113,2023-09-30,La Liga,Barcelona,Villarreal,2,0,1.923,0.754,1940,1730,H,2,0
+114,SYN_00114,2024-08-08,Premier League,Tottenham,Newcastle,1,2,1.362,1.042,1790,1760,A,3,1
+115,SYN_00115,2025-06-02,La Liga,Real Sociedad,Athletic Bilbao,2,1,1.166,0.894,1740,1720,H,3,1
+116,SYN_00116,2025-10-13,Liga Argentina,River Plate,Independiente,1,0,1.799,0.734,1755,1630,H,1,0
+117,SYN_00117,2025-12-26,Premier League,Tottenham,Manchester City,2,3,0.953,1.498,1790,1950,A,5,1
+118,SYN_00118,2025-09-01,Premier League,Newcastle,Chelsea,1,2,1.211,1.036,1760,1830,A,3,1
+119,SYN_00119,2023-12-01,Liga Argentina,River Plate,Racing Club,0,0,1.642,0.857,1755,1680,D,0,0
+120,SYN_00120,2025-02-24,La Liga,Real Madrid,Real Sociedad,1,0,1.958,0.684,1970,1740,H,1,0
+121,SYN_00121,2025-01-14,La Liga,Athletic Bilbao,Real Sociedad,2,1,1.142,0.912,1720,1740,H,3,1
+122,SYN_00122,2025-08-14,Premier League,Manchester City,Newcastle,1,1,1.74,0.663,1950,1760,D,2,0
+123,SYN_00123,2025-12-07,Premier League,Liverpool,Chelsea,1,0,1.664,0.881,1920,1830,H,1,0
+124,SYN_00124,2025-11-15,Premier League,Arsenal,Chelsea,0,0,1.589,0.829,1890,1830,D,0,0
+125,SYN_00125,2024-07-17,Liga Argentina,Estudiantes,San Lorenzo,0,1,1.164,0.9,1620,1645,A,1,0
+126,SYN_00126,2025-07-21,La Liga,Real Madrid,Barcelona,1,1,1.492,1.026,1970,1940,D,2,0
+127,SYN_00127,2024-05-06,Liga Argentina,Racing Club,Estudiantes,0,2,1.288,0.869,1680,1620,A,2,0
+128,SYN_00128,2023-07-21,Premier League,Tottenham,Liverpool,0,1,1.158,1.433,1790,1920,A,1,0
+129,SYN_00129,2024-07-30,Liga Argentina,Racing Club,San Lorenzo,1,2,1.417,0.945,1680,1645,A,3,1
+130,SYN_00130,2025-04-06,Liga Argentina,Independiente,Boca Juniors,0,0,1.049,1.283,1630,1720,D,0,0
+131,SYN_00131,2025-11-05,Liga Argentina,Independiente,Estudiantes,3,1,1.104,0.952,1630,1620,H,4,1
+132,SYN_00132,2023-11-12,Premier League,Newcastle,Manchester City,1,3,0.847,1.362,1760,1950,A,4,1
+133,SYN_00133,2023-07-09,La Liga,Atletico Madrid,Athletic Bilbao,1,0,1.282,0.596,1880,1720,H,1,0
+134,SYN_00134,2024-02-11,Liga Argentina,Independiente,Estudiantes,1,1,1.104,0.952,1630,1620,D,2,0
+135,SYN_00135,2026-04-08,Premier League,Manchester City,Arsenal,0,0,1.392,0.87,1950,1890,D,0,0
+136,SYN_00136,2025-09-09,Premier League,Manchester City,Newcastle,2,1,1.74,0.663,1950,1760,H,3,1
+137,SYN_00137,2025-12-11,Premier League,Chelsea,Tottenham,2,0,1.456,1.066,1830,1790,H,2,0
+138,SYN_00138,2025-08-08,Liga Argentina,Estudiantes,Boca Juniors,0,1,1.005,1.116,1620,1720,A,1,0
+139,SYN_00139,2024-06-11,La Liga,Real Sociedad,Villarreal,2,1,1.282,0.99,1740,1730,H,3,1
+140,SYN_00140,2024-11-30,Liga Argentina,Independiente,Boca Juniors,1,1,1.049,1.283,1630,1720,D,2,0
+141,SYN_00141,2023-09-05,La Liga,Barcelona,Athletic Bilbao,1,2,1.748,0.681,1940,1720,A,3,1
+142,SYN_00142,2023-07-25,La Liga,Barcelona,Athletic Bilbao,4,0,1.748,0.681,1940,1720,H,4,1
+143,SYN_00143,2024-09-13,La Liga,Barcelona,Real Sociedad,0,0,1.836,0.73,1940,1740,D,0,0
+144,SYN_00144,2025-06-08,Premier League,Arsenal,Tottenham,1,0,1.748,0.853,1890,1790,H,1,0
+145,SYN_00145,2025-05-17,Premier League,Newcastle,Tottenham,3,0,1.332,1.066,1760,1790,H,3,1
+146,SYN_00146,2023-09-06,La Liga,Real Sociedad,Real Madrid,0,1,0.874,1.532,1740,1970,A,1,0
+147,SYN_00147,2025-05-31,Liga Argentina,San Lorenzo,Estudiantes,0,2,1.15,0.911,1645,1620,A,2,0
+148,SYN_00148,2026-01-30,La Liga,Athletic Bilbao,Atletico Madrid,0,0,0.761,1.003,1720,1880,D,0,0
+149,SYN_00149,2025-07-19,La Liga,Villarreal,Real Madrid,1,2,0.903,1.605,1730,1970,A,3,1
+150,SYN_00150,2025-11-26,Liga Argentina,Independiente,Racing Club,2,1,1.159,1.159,1630,1680,H,3,1
+151,SYN_00151,2023-07-10,Premier League,Tottenham,Liverpool,0,3,1.158,1.433,1790,1920,A,3,1
+152,SYN_00152,2023-07-21,Premier League,Manchester City,Arsenal,3,2,1.392,0.87,1950,1890,H,5,1
+153,SYN_00153,2023-11-20,La Liga,Athletic Bilbao,Villarreal,0,0,1.197,0.943,1720,1730,D,0,0
+154,SYN_00154,2024-06-20,Premier League,Newcastle,Liverpool,0,0,1.029,1.303,1760,1920,D,0,0
+155,SYN_00155,2024-03-24,Premier League,Newcastle,Arsenal,1,0,0.968,1.243,1760,1890,H,1,0
+156,SYN_00156,2025-06-13,Premier League,Tottenham,Newcastle,0,0,1.362,1.042,1790,1760,D,0,0
+157,SYN_00157,2024-06-26,La Liga,Villarreal,Real Sociedad,0,2,1.265,1.003,1730,1740,A,2,0
+158,SYN_00158,2025-12-14,La Liga,Villarreal,Barcelona,1,2,0.964,1.505,1730,1940,A,3,1
+159,SYN_00159,2024-07-13,Liga Argentina,Boca Juniors,San Lorenzo,2,2,1.569,0.855,1720,1645,D,4,1
+160,SYN_00160,2025-05-25,Premier League,Tottenham,Liverpool,2,2,1.158,1.433,1790,1920,D,4,1
+161,SYN_00161,2024-03-11,Liga Argentina,San Lorenzo,Racing Club,3,2,1.208,1.109,1645,1680,H,5,1
+162,SYN_00162,2024-07-19,Premier League,Chelsea,Tottenham,1,2,1.456,1.066,1830,1790,A,3,1
+163,SYN_00163,2026-04-05,Liga Argentina,San Lorenzo,Estudiantes,1,2,1.15,0.911,1645,1620,A,3,1
+164,SYN_00164,2023-06-10,Liga Argentina,Independiente,Racing Club,1,0,1.159,1.159,1630,1680,H,1,0
+165,SYN_00165,2025-12-03,La Liga,Athletic Bilbao,Real Sociedad,2,1,1.142,0.912,1720,1740,H,3,1
+166,SYN_00166,2025-05-11,La Liga,Real Sociedad,Villarreal,4,1,1.282,0.99,1740,1730,H,5,1
+167,SYN_00167,2025-08-16,La Liga,Real Madrid,Real Sociedad,6,0,1.958,0.684,1970,1740,H,6,1
+168,SYN_00168,2025-05-20,Liga Argentina,Estudiantes,Independiente,2,0,1.217,0.864,1620,1630,H,2,0
+169,SYN_00169,2025-03-08,Liga Argentina,Boca Juniors,Estudiantes,2,0,1.426,0.787,1720,1620,H,2,0
+170,SYN_00170,2025-01-08,La Liga,Real Madrid,Barcelona,2,0,1.492,1.026,1970,1940,H,2,0
+171,SYN_00171,2024-04-30,Liga Argentina,Independiente,Racing Club,0,2,1.159,1.159,1630,1680,A,2,0
+172,SYN_00172,2024-11-26,La Liga,Villarreal,Real Sociedad,1,0,1.265,1.003,1730,1740,H,1,0
+173,SYN_00173,2024-05-08,Liga Argentina,Racing Club,Independiente,0,1,1.481,0.907,1680,1630,A,1,0
+174,SYN_00174,2024-08-01,Liga Argentina,San Lorenzo,River Plate,0,2,0.977,1.346,1645,1755,A,2,0
+175,SYN_00175,2026-02-20,Liga Argentina,Estudiantes,Boca Juniors,2,1,1.005,1.116,1620,1720,H,3,1
+176,SYN_00176,2025-07-05,La Liga,Villarreal,Atletico Madrid,0,2,0.843,1.104,1730,1880,A,2,0
+177,SYN_00177,2023-07-07,La Liga,Barcelona,Villarreal,1,1,1.923,0.754,1940,1730,D,2,0
+178,SYN_00178,2023-11-19,Premier League,Arsenal,Liverpool,1,2,1.35,1.042,1890,1920,A,3,1
+179,SYN_00179,2024-03-20,La Liga,Athletic Bilbao,Real Sociedad,1,1,1.142,0.912,1720,1740,D,2,0
+180,SYN_00180,2024-02-26,La Liga,Athletic Bilbao,Atletico Madrid,2,3,0.761,1.003,1720,1880,A,5,1
+181,SYN_00181,2025-03-23,La Liga,Athletic Bilbao,Atletico Madrid,0,1,0.761,1.003,1720,1880,A,1,0
+182,SYN_00182,2026-02-04,Premier League,Manchester City,Newcastle,2,0,1.74,0.663,1950,1760,H,2,0
+183,SYN_00183,2025-11-16,Liga Argentina,San Lorenzo,River Plate,1,2,0.977,1.346,1645,1755,A,3,1
+184,SYN_00184,2026-01-21,La Liga,Athletic Bilbao,Barcelona,1,2,0.87,1.368,1720,1940,A,3,1
+185,SYN_00185,2025-06-02,La Liga,Real Sociedad,Villarreal,0,0,1.282,0.99,1740,1730,D,0,0
+186,SYN_00186,2024-01-05,La Liga,Atletico Madrid,Villarreal,2,0,1.41,0.66,1880,1730,H,2,0
+187,SYN_00187,2025-08-30,Liga Argentina,River Plate,Boca Juniors,0,0,1.486,0.949,1755,1720,D,0,0
+188,SYN_00188,2026-04-12,Liga Argentina,River Plate,Independiente,1,1,1.799,0.734,1755,1630,D,2,0
+189,SYN_00189,2024-01-13,Liga Argentina,San Lorenzo,Racing Club,1,0,1.208,1.109,1645,1680,H,1,0
+190,SYN_00190,2023-11-03,Premier League,Arsenal,Chelsea,2,0,1.589,0.829,1890,1830,H,2,0
+191,SYN_00191,2024-06-29,La Liga,Villarreal,Barcelona,0,0,0.964,1.505,1730,1940,D,0,0
+192,SYN_00192,2024-07-24,La Liga,Real Sociedad,Atletico Madrid,2,0,0.816,1.054,1740,1880,H,2,0
+193,SYN_00193,2025-05-02,La Liga,Villarreal,Atletico Madrid,0,0,0.843,1.104,1730,1880,D,0,0
+194,SYN_00194,2024-08-20,La Liga,Real Madrid,Barcelona,1,1,1.492,1.026,1970,1940,D,2,0
+195,SYN_00195,2024-10-28,Liga Argentina,Racing Club,Boca Juniors,2,2,1.224,1.172,1680,1720,D,4,1
+196,SYN_00196,2024-12-26,Liga Argentina,Independiente,Boca Juniors,0,0,1.049,1.283,1630,1720,D,0,0
+197,SYN_00197,2025-10-19,La Liga,Athletic Bilbao,Atletico Madrid,0,0,0.761,1.003,1720,1880,D,0,0
+198,SYN_00198,2023-08-29,Premier League,Chelsea,Newcastle,0,2,1.324,0.947,1830,1760,A,2,0
+199,SYN_00199,2024-04-09,La Liga,Villarreal,Real Sociedad,2,1,1.265,1.003,1730,1740,H,3,1
+200,SYN_00200,2024-02-05,La Liga,Villarreal,Barcelona,2,3,0.964,1.505,1730,1940,A,5,1
+201,SYN_00201,2023-08-19,La Liga,Athletic Bilbao,Real Sociedad,0,2,1.142,0.912,1720,1740,A,2,0
+202,SYN_00202,2025-08-26,Premier League,Chelsea,Manchester City,4,1,0.927,1.362,1830,1950,H,5,1
+203,SYN_00203,2023-09-01,La Liga,Atletico Madrid,Barcelona,0,2,1.026,0.958,1880,1940,A,2,0
+204,SYN_00204,2024-10-24,Liga Argentina,Estudiantes,San Lorenzo,4,1,1.164,0.9,1620,1645,H,5,1
+205,SYN_00205,2023-07-20,La Liga,Barcelona,Villarreal,4,1,1.923,0.754,1940,1730,H,5,1
+206,SYN_00206,2025-01-22,Premier League,Liverpool,Arsenal,3,5,1.332,1.057,1920,1890,A,8,1
+207,SYN_00207,2024-03-10,La Liga,Real Madrid,Real Sociedad,2,0,1.958,0.684,1970,1740,H,2,0
+208,SYN_00208,2025-07-15,Liga Argentina,San Lorenzo,Boca Juniors,0,1,1.092,1.228,1645,1720,A,1,0
+209,SYN_00209,2025-09-09,La Liga,Real Madrid,Barcelona,6,0,1.492,1.026,1970,1940,H,6,1
+210,SYN_00210,2023-11-17,Premier League,Newcastle,Liverpool,1,0,1.029,1.303,1760,1920,H,1,0
+211,SYN_00211,2025-06-12,Liga Argentina,Boca Juniors,Independiente,2,0,1.64,0.821,1720,1630,H,2,0
+212,SYN_00212,2025-06-01,Premier League,Manchester City,Tottenham,2,1,1.914,0.746,1950,1790,H,3,1
+213,SYN_00213,2024-05-04,La Liga,Barcelona,Real Sociedad,2,1,1.836,0.73,1940,1740,H,3,1
+214,SYN_00214,2024-04-01,Liga Argentina,River Plate,Boca Juniors,0,0,1.486,0.949,1755,1720,D,0,0
+215,SYN_00215,2024-11-24,Liga Argentina,Estudiantes,San Lorenzo,2,4,1.164,0.9,1620,1645,A,6,1
+216,SYN_00216,2024-09-26,La Liga,Real Madrid,Barcelona,1,0,1.492,1.026,1970,1940,H,1,0
+217,SYN_00217,2024-01-20,Liga Argentina,River Plate,Racing Club,2,0,1.642,0.857,1755,1680,H,2,0
+218,SYN_00218,2024-02-14,Liga Argentina,Estudiantes,Boca Juniors,0,2,1.005,1.116,1620,1720,A,2,0
+219,SYN_00219,2026-04-29,Liga Argentina,River Plate,Boca Juniors,1,2,1.486,0.949,1755,1720,A,3,1
+220,SYN_00220,2024-10-06,Premier League,Tottenham,Manchester City,1,2,0.953,1.498,1790,1950,A,3,1
+221,SYN_00221,2024-04-30,Premier League,Chelsea,Newcastle,2,0,1.324,0.947,1830,1760,H,2,0
+222,SYN_00222,2025-04-05,Liga Argentina,Boca Juniors,Racing Club,1,2,1.497,0.958,1720,1680,A,3,1
+223,SYN_00223,2024-10-29,La Liga,Villarreal,Athletic Bilbao,5,0,1.204,0.936,1730,1720,H,5,1
+224,SYN_00224,2023-11-24,Liga Argentina,River Plate,Estudiantes,1,0,1.564,0.704,1755,1620,H,1,0
+225,SYN_00225,2025-05-30,Liga Argentina,Independiente,San Lorenzo,1,1,1.214,1.035,1630,1645,D,2,0
+226,SYN_00226,2024-02-13,La Liga,Atletico Madrid,Athletic Bilbao,2,1,1.282,0.596,1880,1720,H,3,1
+227,SYN_00227,2025-10-28,Liga Argentina,Estudiantes,Boca Juniors,0,0,1.005,1.116,1620,1720,D,0,0
+228,SYN_00228,2025-05-19,La Liga,Real Sociedad,Athletic Bilbao,0,0,1.166,0.894,1740,1720,D,0,0
+229,SYN_00229,2024-05-24,La Liga,Villarreal,Athletic Bilbao,2,1,1.204,0.936,1730,1720,H,3,1
+230,SYN_00230,2023-07-19,Premier League,Newcastle,Liverpool,1,1,1.029,1.303,1760,1920,D,2,0
+231,SYN_00231,2023-08-20,La Liga,Barcelona,Real Madrid,2,0,1.311,1.168,1940,1970,H,2,0
+232,SYN_00232,2026-01-11,Premier League,Newcastle,Chelsea,1,1,1.211,1.036,1760,1830,D,2,0
+233,SYN_00233,2025-07-09,Liga Argentina,Estudiantes,Racing Club,1,0,1.111,1.008,1620,1680,H,1,0
+234,SYN_00234,2023-08-02,Premier League,Tottenham,Manchester City,1,0,0.953,1.498,1790,1950,H,1,0
+235,SYN_00235,2025-01-18,Premier League,Tottenham,Manchester City,0,2,0.953,1.498,1790,1950,A,2,0
+236,SYN_00236,2024-09-25,Premier League,Newcastle,Liverpool,0,1,1.029,1.303,1760,1920,A,1,0
+237,SYN_00237,2023-09-23,Premier League,Arsenal,Newcastle,1,2,1.589,0.758,1890,1760,A,3,1
+238,SYN_00238,2024-09-10,Liga Argentina,Independiente,River Plate,1,1,0.938,1.408,1630,1755,D,2,0
+239,SYN_00239,2024-06-10,Premier League,Tottenham,Newcastle,3,2,1.362,1.042,1790,1760,H,5,1
+240,SYN_00240,2025-04-12,Liga Argentina,San Lorenzo,Boca Juniors,0,2,1.092,1.228,1645,1720,A,2,0
+241,SYN_00241,2025-11-03,La Liga,Real Sociedad,Athletic Bilbao,4,0,1.166,0.894,1740,1720,H,4,1
+242,SYN_00242,2025-06-25,Liga Argentina,Estudiantes,San Lorenzo,0,0,1.164,0.9,1620,1645,D,0,0
+243,SYN_00243,2025-08-25,Liga Argentina,San Lorenzo,River Plate,0,1,0.977,1.346,1645,1755,A,1,0
+244,SYN_00244,2025-08-09,La Liga,Real Sociedad,Real Madrid,0,1,0.874,1.532,1740,1970,A,1,0
+245,SYN_00245,2025-05-02,Premier League,Tottenham,Liverpool,1,4,1.158,1.433,1790,1920,A,5,1
+246,SYN_00246,2024-07-28,Premier League,Arsenal,Tottenham,3,0,1.748,0.853,1890,1790,H,3,1
+247,SYN_00247,2024-01-06,Liga Argentina,Racing Club,San Lorenzo,2,3,1.417,0.945,1680,1645,A,5,1
+248,SYN_00248,2023-08-21,Liga Argentina,Independiente,Estudiantes,0,1,1.104,0.952,1630,1620,A,1,0
+249,SYN_00249,2026-03-29,La Liga,Athletic Bilbao,Atletico Madrid,1,0,0.761,1.003,1720,1880,H,1,0
+250,SYN_00250,2023-08-05,La Liga,Barcelona,Real Madrid,1,2,1.311,1.168,1940,1970,A,3,1
+251,SYN_00251,2023-12-22,Premier League,Tottenham,Liverpool,1,1,1.158,1.433,1790,1920,D,2,0
+252,SYN_00252,2024-11-28,Liga Argentina,Racing Club,Boca Juniors,0,1,1.224,1.172,1680,1720,A,1,0
+253,SYN_00253,2024-03-07,La Liga,Real Sociedad,Barcelona,1,0,0.932,1.437,1740,1940,H,1,0
+254,SYN_00254,2025-07-11,Premier League,Liverpool,Manchester City,1,1,1.165,1.158,1920,1950,D,2,0
+255,SYN_00255,2024-09-28,Liga Argentina,Estudiantes,Boca Juniors,1,0,1.005,1.116,1620,1720,H,1,0
+256,SYN_00256,2024-07-15,Premier League,Newcastle,Arsenal,1,2,0.968,1.243,1760,1890,A,3,1
+257,SYN_00257,2023-10-12,La Liga,Real Madrid,Villarreal,2,0,2.051,0.707,1970,1730,H,2,0
+258,SYN_00258,2026-03-16,La Liga,Atletico Madrid,Athletic Bilbao,1,0,1.282,0.596,1880,1720,H,1,0
+259,SYN_00259,2024-10-19,Liga Argentina,Boca Juniors,San Lorenzo,1,1,1.569,0.855,1720,1645,D,2,0
+260,SYN_00260,2024-07-29,Premier League,Liverpool,Newcastle,1,1,1.664,0.805,1920,1760,D,2,0
+261,SYN_00261,2024-08-11,Liga Argentina,River Plate,Independiente,5,1,1.799,0.734,1755,1630,H,6,1
+262,SYN_00262,2026-01-16,La Liga,Real Sociedad,Real Madrid,2,3,0.874,1.532,1740,1970,A,5,1
+263,SYN_00263,2026-03-09,Premier League,Arsenal,Newcastle,3,1,1.589,0.758,1890,1760,H,4,1
+264,SYN_00264,2024-05-24,Liga Argentina,Independiente,Racing Club,0,1,1.159,1.159,1630,1680,A,1,0
+265,SYN_00265,2024-05-31,Premier League,Manchester City,Liverpool,4,1,1.479,0.912,1950,1920,H,5,1
+266,SYN_00266,2025-02-18,Liga Argentina,Estudiantes,River Plate,0,0,0.899,1.224,1620,1755,D,0,0
+267,SYN_00267,2025-06-04,Premier League,Arsenal,Newcastle,3,0,1.589,0.758,1890,1760,H,3,1
+268,SYN_00268,2026-02-19,Premier League,Newcastle,Manchester City,0,1,0.847,1.362,1760,1950,A,1,0
+269,SYN_00269,2024-01-03,La Liga,Atletico Madrid,Real Madrid,1,3,0.962,1.022,1880,1970,A,4,1
+270,SYN_00270,2023-12-29,Liga Argentina,River Plate,Estudiantes,3,0,1.564,0.704,1755,1620,H,3,1
+271,SYN_00271,2025-04-08,Liga Argentina,Boca Juniors,Racing Club,4,1,1.497,0.958,1720,1680,H,5,1
+272,SYN_00272,2025-09-18,Liga Argentina,Racing Club,Estudiantes,1,3,1.288,0.869,1680,1620,A,4,1
+273,SYN_00273,2026-01-28,Premier League,Tottenham,Arsenal,2,0,1.089,1.368,1790,1890,H,2,0
+274,SYN_00274,2024-02-21,Liga Argentina,San Lorenzo,River Plate,0,2,0.977,1.346,1645,1755,A,2,0
+275,SYN_00275,2023-10-19,Premier League,Liverpool,Arsenal,0,1,1.332,1.057,1920,1890,A,1,0
+276,SYN_00276,2024-06-07,Liga Argentina,River Plate,Independiente,2,2,1.799,0.734,1755,1630,D,4,1
+277,SYN_00277,2025-08-06,Premier League,Chelsea,Tottenham,1,1,1.456,1.066,1830,1790,D,2,0
+278,SYN_00278,2023-07-31,La Liga,Villarreal,Barcelona,0,0,0.964,1.505,1730,1940,D,0,0
+279,SYN_00279,2025-03-21,La Liga,Atletico Madrid,Real Sociedad,2,2,1.346,0.639,1880,1740,D,4,1
+280,SYN_00280,2024-12-31,Premier League,Arsenal,Liverpool,1,2,1.35,1.042,1890,1920,A,3,1
+281,SYN_00281,2025-12-28,Premier League,Tottenham,Arsenal,1,2,1.089,1.368,1790,1890,A,3,1
+282,SYN_00282,2025-11-10,Premier League,Tottenham,Chelsea,1,1,1.362,1.14,1790,1830,D,2,0
+283,SYN_00283,2026-03-14,Liga Argentina,Independiente,San Lorenzo,2,1,1.214,1.035,1630,1645,H,3,1
+284,SYN_00284,2025-07-13,Liga Argentina,River Plate,Estudiantes,0,0,1.564,0.704,1755,1620,D,0,0
+285,SYN_00285,2024-08-31,La Liga,Real Sociedad,Athletic Bilbao,0,0,1.166,0.894,1740,1720,D,0,0
+286,SYN_00286,2026-02-01,Liga Argentina,Independiente,San Lorenzo,1,1,1.214,1.035,1630,1645,D,2,0
+287,SYN_00287,2025-04-07,La Liga,Atletico Madrid,Real Madrid,1,2,0.962,1.022,1880,1970,A,3,1
+288,SYN_00288,2024-09-24,Premier League,Manchester City,Tottenham,2,0,1.914,0.746,1950,1790,H,2,0
+289,SYN_00289,2025-05-01,La Liga,Atletico Madrid,Real Sociedad,0,2,1.346,0.639,1880,1740,A,2,0
+290,SYN_00290,2023-06-29,La Liga,Barcelona,Real Madrid,3,2,1.311,1.168,1940,1970,H,5,1
+291,SYN_00291,2023-10-22,Liga Argentina,Estudiantes,Racing Club,2,0,1.111,1.008,1620,1680,H,2,0
+292,SYN_00292,2025-04-11,Premier League,Manchester City,Newcastle,5,0,1.74,0.663,1950,1760,H,5,1
+293,SYN_00293,2025-03-01,Premier League,Manchester City,Newcastle,2,1,1.74,0.663,1950,1760,H,3,1
+294,SYN_00294,2025-03-07,Premier League,Manchester City,Tottenham,2,1,1.914,0.746,1950,1790,H,3,1
+295,SYN_00295,2024-11-08,Premier League,Arsenal,Manchester City,0,1,1.112,1.089,1890,1950,A,1,0
+296,SYN_00296,2026-02-01,La Liga,Real Sociedad,Villarreal,2,3,1.282,0.99,1740,1730,A,5,1
+297,SYN_00297,2024-02-11,La Liga,Atletico Madrid,Barcelona,3,0,1.026,0.958,1880,1940,H,3,1
+298,SYN_00298,2025-10-12,La Liga,Athletic Bilbao,Barcelona,1,3,0.87,1.368,1720,1940,A,4,1
+299,SYN_00299,2025-01-22,La Liga,Atletico Madrid,Barcelona,1,2,1.026,0.958,1880,1940,A,3,1
+300,SYN_00300,2024-01-03,Liga Argentina,Boca Juniors,Racing Club,1,0,1.497,0.958,1720,1680,H,1,0
+301,SYN_00301,2024-01-06,La Liga,Atletico Madrid,Villarreal,2,2,1.41,0.66,1880,1730,D,4,1
+302,SYN_00302,2024-05-24,Liga Argentina,San Lorenzo,River Plate,1,1,0.977,1.346,1645,1755,D,2,0
+303,SYN_00303,2023-09-25,La Liga,Barcelona,Real Sociedad,2,0,1.836,0.73,1940,1740,H,2,0
+304,SYN_00304,2023-08-24,Premier League,Chelsea,Liverpool,0,1,1.125,1.303,1830,1920,A,1,0
+305,SYN_00305,2025-03-30,Liga Argentina,Independiente,San Lorenzo,0,1,1.214,1.035,1630,1645,A,1,0
+306,SYN_00306,2025-01-09,Liga Argentina,Boca Juniors,Estudiantes,2,0,1.426,0.787,1720,1620,H,2,0
+307,SYN_00307,2024-06-24,La Liga,Villarreal,Atletico Madrid,1,0,0.843,1.104,1730,1880,H,1,0
+308,SYN_00308,2024-09-18,La Liga,Villarreal,Barcelona,2,1,0.964,1.505,1730,1940,H,3,1
+309,SYN_00309,2024-04-26,Premier League,Liverpool,Chelsea,0,1,1.664,0.881,1920,1830,A,1,0
+310,SYN_00310,2025-09-18,Premier League,Newcastle,Arsenal,0,1,0.968,1.243,1760,1890,A,1,0
+311,SYN_00311,2024-05-19,Premier League,Manchester City,Tottenham,3,4,1.914,0.746,1950,1790,A,7,1
+312,SYN_00312,2024-02-25,Liga Argentina,San Lorenzo,Independiente,1,1,1.322,0.95,1645,1630,D,2,0
+313,SYN_00313,2025-07-26,La Liga,Villarreal,Real Madrid,1,3,0.903,1.605,1730,1970,A,4,1
+314,SYN_00314,2026-01-12,Liga Argentina,Independiente,Boca Juniors,2,2,1.049,1.283,1630,1720,D,4,1
+315,SYN_00315,2026-02-15,La Liga,Barcelona,Atletico Madrid,2,0,1.224,0.803,1940,1880,H,2,0
+316,SYN_00316,2025-07-17,La Liga,Barcelona,Real Madrid,3,2,1.311,1.168,1940,1970,H,5,1
+317,SYN_00317,2024-04-06,La Liga,Real Madrid,Real Sociedad,2,0,1.958,0.684,1970,1740,H,2,0
+318,SYN_00318,2024-04-27,La Liga,Real Madrid,Villarreal,2,0,2.051,0.707,1970,1730,H,2,0
+319,SYN_00319,2026-02-26,Premier League,Manchester City,Arsenal,1,1,1.392,0.87,1950,1890,D,2,0
+320,SYN_00320,2023-09-09,Premier League,Newcastle,Tottenham,1,1,1.332,1.066,1760,1790,D,2,0
+321,SYN_00321,2023-09-29,Premier League,Chelsea,Arsenal,1,1,1.059,1.243,1830,1890,D,2,0
+322,SYN_00322,2024-03-26,La Liga,Barcelona,Atletico Madrid,2,0,1.224,0.803,1940,1880,H,2,0
+323,SYN_00323,2025-02-03,Premier League,Arsenal,Manchester City,3,1,1.112,1.089,1890,1950,H,4,1
+324,SYN_00324,2024-09-02,Premier League,Arsenal,Liverpool,2,2,1.35,1.042,1890,1920,D,4,1
+325,SYN_00325,2024-05-01,Premier League,Newcastle,Arsenal,1,2,0.968,1.243,1760,1890,A,3,1
+326,SYN_00326,2023-08-01,Liga Argentina,Estudiantes,Independiente,0,0,1.217,0.864,1620,1630,D,0,0
+327,SYN_00327,2024-03-13,Liga Argentina,Boca Juniors,River Plate,1,0,1.212,1.163,1720,1755,H,1,0
+328,SYN_00328,2025-02-03,La Liga,Atletico Madrid,Villarreal,3,0,1.41,0.66,1880,1730,H,3,1
+329,SYN_00329,2024-03-23,La Liga,Real Sociedad,Villarreal,0,0,1.282,0.99,1740,1730,D,0,0
+330,SYN_00330,2025-11-09,Premier League,Arsenal,Newcastle,2,2,1.589,0.758,1890,1760,D,4,1
+331,SYN_00331,2024-07-26,La Liga,Villarreal,Real Sociedad,1,1,1.265,1.003,1730,1740,D,2,0
+332,SYN_00332,2025-01-21,La Liga,Real Madrid,Villarreal,1,2,2.051,0.707,1970,1730,A,3,1
+333,SYN_00333,2025-09-06,Liga Argentina,San Lorenzo,Racing Club,0,2,1.208,1.109,1645,1680,A,2,0
+334,SYN_00334,2024-09-11,La Liga,Real Madrid,Barcelona,1,1,1.492,1.026,1970,1940,D,2,0
+335,SYN_00335,2024-07-30,Liga Argentina,Racing Club,Estudiantes,0,0,1.288,0.869,1680,1620,D,0,0
+336,SYN_00336,2024-04-07,Premier League,Arsenal,Manchester City,0,1,1.112,1.089,1890,1950,A,1,0
+337,SYN_00337,2024-04-19,Premier League,Tottenham,Chelsea,2,0,1.362,1.14,1790,1830,H,2,0
+338,SYN_00338,2023-11-07,Premier League,Liverpool,Manchester City,2,2,1.165,1.158,1920,1950,D,4,1
+339,SYN_00339,2023-06-28,Liga Argentina,San Lorenzo,Racing Club,1,0,1.208,1.109,1645,1680,H,1,0
+340,SYN_00340,2025-10-22,Premier League,Chelsea,Liverpool,1,1,1.125,1.303,1830,1920,D,2,0
+341,SYN_00341,2023-12-20,La Liga,Atletico Madrid,Villarreal,0,0,1.41,0.66,1880,1730,D,0,0
+342,SYN_00342,2025-01-08,Liga Argentina,Independiente,Estudiantes,0,2,1.104,0.952,1630,1620,A,2,0
+343,SYN_00343,2025-03-15,Premier League,Newcastle,Manchester City,2,2,0.847,1.362,1760,1950,D,4,1
+344,SYN_00344,2023-11-23,Liga Argentina,River Plate,Estudiantes,3,0,1.564,0.704,1755,1620,H,3,1
+345,SYN_00345,2025-10-07,Premier League,Tottenham,Newcastle,3,1,1.362,1.042,1790,1760,H,4,1
+346,SYN_00346,2024-10-29,Premier League,Chelsea,Manchester City,2,1,0.927,1.362,1830,1950,H,3,1
+347,SYN_00347,2023-12-21,La Liga,Real Madrid,Villarreal,2,0,2.051,0.707,1970,1730,H,2,0
+348,SYN_00348,2024-10-02,La Liga,Athletic Bilbao,Villarreal,3,1,1.197,0.943,1720,1730,H,4,1
+349,SYN_00349,2025-09-17,La Liga,Real Madrid,Barcelona,1,0,1.492,1.026,1970,1940,H,1,0
+350,SYN_00350,2024-06-10,Liga Argentina,San Lorenzo,River Plate,1,1,0.977,1.346,1645,1755,D,2,0
+351,SYN_00351,2025-06-03,Liga Argentina,Independiente,Racing Club,0,3,1.159,1.159,1630,1680,A,3,1
+352,SYN_00352,2024-01-24,La Liga,Villarreal,Real Madrid,0,0,0.903,1.605,1730,1970,D,0,0
+353,SYN_00353,2024-05-14,La Liga,Barcelona,Atletico Madrid,0,2,1.224,0.803,1940,1880,A,2,0
+354,SYN_00354,2024-01-01,Liga Argentina,Boca Juniors,Estudiantes,0,2,1.426,0.787,1720,1620,A,2,0
+355,SYN_00355,2025-01-28,La Liga,Villarreal,Real Madrid,1,1,0.903,1.605,1730,1970,D,2,0
+356,SYN_00356,2024-08-23,Liga Argentina,Estudiantes,Independiente,3,0,1.217,0.864,1620,1630,H,3,1
+357,SYN_00357,2024-06-25,Liga Argentina,Boca Juniors,Racing Club,1,1,1.497,0.958,1720,1680,D,2,0
+358,SYN_00358,2024-09-04,Liga Argentina,Racing Club,Estudiantes,1,1,1.288,0.869,1680,1620,D,2,0
+359,SYN_00359,2025-02-18,Premier League,Chelsea,Arsenal,0,2,1.059,1.243,1830,1890,A,2,0
+360,SYN_00360,2024-10-21,Liga Argentina,San Lorenzo,Independiente,0,0,1.322,0.95,1645,1630,D,0,0
+361,SYN_00361,2024-06-20,Liga Argentina,Estudiantes,Racing Club,1,2,1.111,1.008,1620,1680,A,3,1
+362,SYN_00362,2024-05-20,La Liga,Villarreal,Barcelona,0,0,0.964,1.505,1730,1940,D,0,0
+363,SYN_00363,2024-06-13,Liga Argentina,Estudiantes,Independiente,1,3,1.217,0.864,1620,1630,A,4,1
+364,SYN_00364,2024-08-07,La Liga,Atletico Madrid,Villarreal,2,2,1.41,0.66,1880,1730,D,4,1
+365,SYN_00365,2026-02-06,Premier League,Newcastle,Chelsea,0,1,1.211,1.036,1760,1830,A,1,0
+366,SYN_00366,2023-11-14,Premier League,Liverpool,Chelsea,2,1,1.664,0.881,1920,1830,H,3,1
+367,SYN_00367,2026-01-06,Premier League,Manchester City,Chelsea,2,0,1.74,0.725,1950,1830,H,2,0
+368,SYN_00368,2025-07-19,Premier League,Arsenal,Manchester City,1,2,1.112,1.089,1890,1950,A,3,1
+369,SYN_00369,2025-02-26,Premier League,Manchester City,Tottenham,2,1,1.914,0.746,1950,1790,H,3,1
+370,SYN_00370,2026-02-06,La Liga,Villarreal,Real Sociedad,1,5,1.265,1.003,1730,1740,A,6,1
+371,SYN_00371,2025-09-28,Liga Argentina,Boca Juniors,Estudiantes,0,1,1.426,0.787,1720,1620,A,1,0
+372,SYN_00372,2024-12-19,La Liga,Atletico Madrid,Athletic Bilbao,0,0,1.282,0.596,1880,1720,D,0,0
+373,SYN_00373,2023-06-23,Premier League,Tottenham,Chelsea,0,0,1.362,1.14,1790,1830,D,0,0
+374,SYN_00374,2025-08-14,La Liga,Atletico Madrid,Real Madrid,3,0,0.962,1.022,1880,1970,H,3,1
+375,SYN_00375,2024-04-07,La Liga,Villarreal,Real Sociedad,1,1,1.265,1.003,1730,1740,D,2,0
+376,SYN_00376,2025-11-28,Premier League,Chelsea,Newcastle,2,1,1.324,0.947,1830,1760,H,3,1
+377,SYN_00377,2024-10-14,La Liga,Real Madrid,Villarreal,3,2,2.051,0.707,1970,1730,H,5,1
+378,SYN_00378,2024-05-05,Liga Argentina,Estudiantes,San Lorenzo,0,1,1.164,0.9,1620,1645,A,1,0
+379,SYN_00379,2023-07-12,Liga Argentina,River Plate,Boca Juniors,0,3,1.486,0.949,1755,1720,A,3,1
+380,SYN_00380,2025-09-08,La Liga,Real Sociedad,Real Madrid,0,2,0.874,1.532,1740,1970,A,2,0
+381,SYN_00381,2023-11-05,Liga Argentina,Estudiantes,Independiente,2,1,1.217,0.864,1620,1630,H,3,1
+382,SYN_00382,2024-03-19,Premier League,Liverpool,Manchester City,2,1,1.165,1.158,1920,1950,H,3,1
+383,SYN_00383,2025-06-24,La Liga,Athletic Bilbao,Real Sociedad,2,1,1.142,0.912,1720,1740,H,3,1
+384,SYN_00384,2024-09-04,Premier League,Tottenham,Liverpool,2,0,1.158,1.433,1790,1920,H,2,0
+385,SYN_00385,2025-11-25,La Liga,Atletico Madrid,Villarreal,2,1,1.41,0.66,1880,1730,H,3,1
+386,SYN_00386,2025-02-11,Liga Argentina,Boca Juniors,San Lorenzo,1,2,1.569,0.855,1720,1645,A,3,1
+387,SYN_00387,2023-12-05,La Liga,Barcelona,Athletic Bilbao,2,1,1.748,0.681,1940,1720,H,3,1
+388,SYN_00388,2023-08-08,Liga Argentina,Independiente,San Lorenzo,0,0,1.214,1.035,1630,1645,D,0,0
+389,SYN_00389,2025-07-29,Liga Argentina,Racing Club,River Plate,1,0,1.095,1.285,1680,1755,H,1,0
+390,SYN_00390,2024-07-31,La Liga,Barcelona,Real Madrid,0,1,1.311,1.168,1940,1970,A,1,0
+391,SYN_00391,2025-03-14,Liga Argentina,Independiente,Racing Club,0,2,1.159,1.159,1630,1680,A,2,0
+392,SYN_00392,2025-09-19,Liga Argentina,San Lorenzo,Estudiantes,1,0,1.15,0.911,1645,1620,H,1,0
+393,SYN_00393,2024-10-03,Premier League,Newcastle,Tottenham,1,2,1.332,1.066,1760,1790,A,3,1
+394,SYN_00394,2023-06-26,Premier League,Tottenham,Chelsea,1,1,1.362,1.14,1790,1830,D,2,0
+395,SYN_00395,2024-03-21,Liga Argentina,Racing Club,River Plate,0,2,1.095,1.285,1680,1755,A,2,0
+396,SYN_00396,2024-09-10,Liga Argentina,San Lorenzo,Boca Juniors,0,3,1.092,1.228,1645,1720,A,3,1
+397,SYN_00397,2023-07-12,Liga Argentina,Racing Club,Boca Juniors,2,2,1.224,1.172,1680,1720,D,4,1
+398,SYN_00398,2025-02-13,Liga Argentina,River Plate,Boca Juniors,4,2,1.486,0.949,1755,1720,H,6,1
+399,SYN_00399,2025-10-15,La Liga,Real Madrid,Atletico Madrid,2,1,1.305,0.753,1970,1880,H,3,1

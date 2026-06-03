@@ -305,7 +305,7 @@ class DataFetcher:
             r = requests.get(
                 f"{APISPORTS_BASE}/fixtures",
                 headers=_h(),
-                params={"team": home_id, "season": season, "last": 5, "status": "FT"},
+                params={"team": home_id, "season": season, "from": "2024-01-01", "to": "2024-12-31", "status": "FT"},
                 timeout=15,
             )
             if r.status_code == 200:
@@ -319,7 +319,7 @@ class DataFetcher:
             r = requests.get(
                 f"{APISPORTS_BASE}/fixtures",
                 headers=_h(),
-                params={"team": away_id, "season": season, "last": 5, "status": "FT"},
+                params={"team": away_id, "season": season, "from": "2024-01-01", "to": "2024-12-31", "status": "FT"},
                 timeout=15,
             )
             if r.status_code == 200:
@@ -333,7 +333,7 @@ class DataFetcher:
             r = requests.get(
                 f"{APISPORTS_BASE}/fixtures/headtohead",
                 headers=_h(),
-                params={"h2h": f"{home_id}-{away_id}", "last": 5, "status": "FT"},
+                params={"h2h": f"{home_id}-{away_id}", "season": 2024, "status": "FT"},
                 timeout=15,
             )
             if r.status_code == 200:

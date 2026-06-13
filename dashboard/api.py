@@ -237,6 +237,10 @@ def _train_and_analyze():
         match_enriched = {**match, "form_home": form_home, "form_away": form_away, "h2h": h2h}
         real_odds = match.get("real_odds")
 
+        # Mundial 2026: el modelo todavia no conoce la fuerza de selecciones.
+        # Mostramos los partidos pero NO generamos value bets (evita edges falsos).
+        skip_alerts = match.get("league") == "Mundial 2026"
+
         if real_odds and real_odds.get("odd_home"):
             best_by_market = real_odds.get("best_by_market", {})
             closing_base = {
@@ -263,7 +267,7 @@ def _train_and_analyze():
                     "bookmaker_url":  bk_info["bk_url"],
                 }
                 for a in det.detect(pred, market_odds, match_enriched, closing_odds):
-                    if a.get("market") == market_id:
+                    if a.get("market") == market_id and not skip_alerts:
                         all_alerts.append(a)
             arb = arb_det.detect_arb([closing_base])
         else:
@@ -271,7 +275,8 @@ def _train_and_analyze():
             odds_list = [{**sim, "bookmaker_name": "Simulado", "bookmaker_url": ""}]
             closing_odds = fetcher.get_closing_odds(match, odds_list[0], pred)
             for odds in odds_list:
-                all_alerts.extend(det.detect(pred, odds, match_enriched, closing_odds))
+                if not skip_alerts:
+                    all_alerts.extend(det.detect(pred, odds, match_enriched, closing_odds))
             arb = arb_det.detect_arb(odds_list)
 
         if arb:

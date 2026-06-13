@@ -647,6 +647,8 @@ export default function App() {
   const [selLeague,  setSelLeague]  = useState("all")
   const [selConf,    setSelConf]    = useState("all")
   const [minEdge,    setMinEdge]    = useState(0)
+  const [sortBy,     setSortBy]     = useState("edge_pct")
+  const [sortDir,    setSortDir]    = useState("desc")
   const [lastUpdate, setLastUpdate] = useState(null)
   const [bankrollCurve, setBankrollCurve] = useState([])
   const [editBankroll, setEditBankroll]   = useState(false)
@@ -704,11 +706,33 @@ export default function App() {
     setSelected(n)
   }
 
+  const clearFilters = () => { setSelLeague("all"); setSelConf("all"); setMinEdge(0) }
+
   const filtered = alerts.filter(a =>
     (selLeague === "all" || a.league === selLeague) &&
     (selConf   === "all" || a.confidence === selConf) &&
     a.edge_pct >= minEdge
   )
+
+  const confRank = { ALTA:3, MEDIA:2, BAJA:1 }
+  const sortVal = a => {
+    switch (sortBy) {
+      case "confidence": return confRank[a.confidence] || 0
+      case "kickoff":    return a.kickoff || ""
+      case "stake":      return (bkData?.bankroll || 1000) * (a.kelly_frac || 0)
+      default:           return a[sortBy] ?? 0
+    }
+  }
+  const sorted = [...filtered].sort((x, y) => {
+    const vx = sortVal(x), vy = sortVal(y)
+    const cmp = typeof vx === "string" ? vx.localeCompare(vy) : vx - vy
+    return sortDir === "asc" ? cmp : -cmp
+  })
+  const toggleSort = key => {
+    if (sortBy === key) setSortDir(d => d === "asc" ? "desc" : "asc")
+    else { setSortBy(key); setSortDir("desc") }
+  }
+
   const selAlerts  = alerts.filter(a => selected.has(a.match_id + a.market))
   const totalStake = selAlerts.reduce((s, a) => s + Math.round((bkData?.bankroll||1000) * a.kelly_frac), 0)
   const avgEdge    = alerts.length ? (alerts.reduce((s,a)=>s+a.edge_pct,0)/alerts.length).toFixed(1) : "0.0"
@@ -744,6 +768,7 @@ export default function App() {
         @keyframes pulse{0%{box-shadow:0 0 0 0 ${C.green}80}70%{box-shadow:0 0 0 6px ${C.green}00}100%{box-shadow:0 0 0 0 ${C.green}00}}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        @keyframes loadbar{0%{left:-40%}100%{left:100%}}
         .alert-row:hover{background:${C.bg3} !important;cursor:pointer}
         .tab-btn{background:none;border:none;cursor:pointer;transition:color .15s;padding:10px 18px;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px}
         .sel{background:${C.bg3};border:1px solid ${C.border};color:${C.text1};border-radius:4px;padding:5px 10px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none}
@@ -873,6 +898,7 @@ export default function App() {
                 <option value="all">Todo nivel de confianza</option>
                 <option value="ALTA">Solo confianza ALTA</option>
                 <option value="MEDIA">Solo confianza MEDIA</option>
+                <option value="BAJA">Solo confianza BAJA</option>
               </select>
               <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                 <span style={{ fontSize:12, color:C.text2 }}>Ventaja minima:</span>
@@ -892,48 +918,102 @@ export default function App() {
                     style={{ background:"none", border:"none", color:C.green, cursor:"pointer", fontSize:14 }}>✕</button>
                 </div>
               )}
-              <span style={{ fontSize:12, color:C.text2, marginLeft:selected.size>0?"0":"auto" }}>
+              {(selLeague!=="all" || selConf!=="all" || minEdge>0) && (
+                <button className="btn" onClick={clearFilters}
+                  style={{ marginLeft: selected.size>0?0:"auto", fontSize:11, padding:"4px 10px" }}>
+                  ✕ Limpiar filtros
+                </button>
+              )}
+              <span style={{ fontSize:12, color:C.text2,
+                marginLeft:(selected.size>0 || selLeague!=="all" || selConf!=="all" || minEdge>0)?"10px":"auto" }}>
                 {filtered.length} resultado{filtered.length!==1?"s":""}
               </span>
             </div>
 
             {/* Alerts table */}
-            <Panel title="APUESTAS DE VALOR DETECTADAS - TIEMPO REAL">
+            <Panel title="APUESTAS DE VALOR DETECTADAS - TIEMPO REAL"
+              action={refreshing && (
+                <span style={{ fontSize:10, color:C.blue, fontFamily:"'JetBrains Mono',monospace",
+                  display:"flex", alignItems:"center", gap:5 }}>
+                  <span style={{ animation:"spin 1s linear infinite", display:"inline-block" }}>↻</span>
+                  actualizando…
+                </span>
+              )}>
               {/* Table header */}
               <div style={{ display:"grid",
                 gridTemplateColumns:"20px 70px minmax(0,1fr) 100px 55px 65px 65px 60px 90px",
                 gap:6, padding:"8px 14px", borderBottom:`1px solid ${C.border}`, background:C.bg3 }}>
                 {[
                   { h:"",         tip:"" },
-                  { h:"CONFIANZA",tip:"Nivel de confianza: ALTA (edge >=10%), MEDIA (5-10%), BAJA (3-5%)" },
-                  { h:"PARTIDO",  tip:"Equipos, liga y hora del partido. λ = goles esperados segun el modelo" },
+                  { h:"CONFIANZA",tip:"Nivel de confianza: ALTA (edge >=10%), MEDIA (5-10%), BAJA (3-5%)", key:"confidence" },
+                  { h:"PARTIDO",  tip:"Equipos, liga y hora del partido. Ordena por hora de inicio", key:"kickoff" },
                   { h:"TIPO",     tip:"Mercado: 1X2 Local/Empate/Visitante o Over/Under 2.5 goles" },
-                  { h:"CUOTA",    tip:"Cuota ofrecida por la casa de apuestas. Mayor cuota = mayor pago potencial" },
-                  { h:"P.MOD",    tip:"Probabilidad calculada por nuestro modelo (Poisson + Regresion Logistica)" },
-                  { h:"EDGE",     tip:"Ventaja matematica sobre la casa. Edge = P.Modelo - P.Implicita en cuota" },
-                  { h:"STAKE",    tip:"Monto sugerido a apostar en $ segun tu bankroll y el criterio de Kelly" },
+                  { h:"CUOTA",    tip:"Cuota ofrecida por la casa de apuestas. Mayor cuota = mayor pago potencial", key:"odd" },
+                  { h:"P.MOD",    tip:"Probabilidad calculada por nuestro modelo (Poisson + Regresion Logistica)", key:"p_model" },
+                  { h:"EDGE",     tip:"Ventaja matematica sobre la casa. Edge = P.Modelo - P.Implicita en cuota", key:"edge_pct" },
+                  { h:"STAKE",    tip:"Monto sugerido a apostar en $ segun tu bankroll y el criterio de Kelly", key:"stake" },
                   { h:"% / INFO", tip:"% del bankroll total sugerido por Kelly. Clic en info para ver forma reciente y H2H" },
-                ].map(({h,tip},i)=>(
-                  <span key={i} title={tip} style={{ fontSize:11, color:C.text2,
-                    fontFamily:"'JetBrains Mono',monospace", letterSpacing:".06em",
-                    cursor: tip ? "help" : "default",
-                    borderBottom: tip ? `1px dotted ${C.text2}40` : "none" }}>{h}</span>
+                ].map(({h,tip,key},i)=>(
+                  <span key={i} title={key ? `${tip}\n(clic para ordenar)` : tip}
+                    onClick={key ? ()=>toggleSort(key) : undefined}
+                    style={{ fontSize:11, color: key&&sortBy===key ? C.text0 : C.text2,
+                    fontFamily:"'JetBrains Mono',monospace", letterSpacing:".06em", userSelect:"none",
+                    cursor: key ? "pointer" : tip ? "help" : "default",
+                    borderBottom: tip && !key ? `1px dotted ${C.text2}40` : "none" }}>
+                    {h}{key && sortBy===key ? (sortDir==="asc"?" ↑":" ↓") : ""}
+                  </span>
                 ))}
               </div>
 
+              {/* Loading bar durante refresh */}
+              {refreshing && (
+                <div style={{ position:"relative", height:2, background:C.border, overflow:"hidden" }}>
+                  <div style={{ position:"absolute", top:0, height:2, width:"40%",
+                    background:C.blue, animation:"loadbar 1s linear infinite" }}/>
+                </div>
+              )}
+
               {/* Rows */}
-              <div style={{ maxHeight:420, overflowY:"auto" }}>
+              <div style={{ maxHeight:420, overflowY:"auto",
+                opacity: refreshing ? 0.5 : 1, pointerEvents: refreshing ? "none" : "auto",
+                transition:"opacity .2s ease" }}>
                 {loading && Array(6).fill(0).map((_,i) => (
                   <div key={i} style={{ padding:"12px 14px", borderBottom:`1px solid ${C.border}` }}>
                     <Skeleton h={16}/>
                   </div>
                 ))}
-                {!loading && filtered.length === 0 && (
-                  <div style={{ padding:"36px", textAlign:"center", color:C.text2, fontSize:14 }}>
-                    No hay apuestas con estos filtros. Proba reducir la ventaja minima.
+                {!loading && filtered.length === 0 && alerts.length === 0 && (
+                  <div style={{ padding:"48px 36px", textAlign:"center", display:"flex",
+                    flexDirection:"column", alignItems:"center", gap:10 }}>
+                    <span style={{ fontSize:34, opacity:.5 }}>🔍</span>
+                    <span style={{ fontSize:15, fontWeight:600, color:C.text1 }}>
+                      No hay value bets en este momento
+                    </span>
+                    <span style={{ fontSize:13, color:C.text2, maxWidth:440, lineHeight:1.6 }}>
+                      El modelo no detecto apuestas con ventaja en los partidos proximos.
+                      Proba actualizar para forzar un nuevo analisis con cuotas frescas.
+                    </span>
+                    <button className="btn green" onClick={doRefresh} disabled={refreshing}
+                      style={{ marginTop:6 }}>↻ Actualizar ahora</button>
                   </div>
                 )}
-                {!loading && filtered.map((a, idx) => {
+                {!loading && filtered.length === 0 && alerts.length > 0 && (
+                  <div style={{ padding:"48px 36px", textAlign:"center", display:"flex",
+                    flexDirection:"column", alignItems:"center", gap:10 }}>
+                    <span style={{ fontSize:34, opacity:.5 }}>🎚️</span>
+                    <span style={{ fontSize:15, fontWeight:600, color:C.text1 }}>
+                      Ningun resultado con estos filtros
+                    </span>
+                    <span style={{ fontSize:13, color:C.text2, maxWidth:440, lineHeight:1.6 }}>
+                      Hay {alerts.length} apuesta{alerts.length>1?"s":""} detectada{alerts.length>1?"s":""},
+                      pero ninguna cumple los filtros actuales. Proba bajar la ventaja minima o ampliar el nivel de confianza.
+                    </span>
+                    <button className="btn" onClick={clearFilters} style={{ marginTop:6 }}>
+                      ✕ Limpiar filtros
+                    </button>
+                  </div>
+                )}
+                {!loading && sorted.map((a, idx) => {
                   const rowKey  = a.match_id + a.market
                   const stake   = Math.round(bk * a.kelly_frac)
                   const isExp   = expandedRow === rowKey

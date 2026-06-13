@@ -237,9 +237,10 @@ def _train_and_analyze():
         match_enriched = {**match, "form_home": form_home, "form_away": form_away, "h2h": h2h}
         real_odds = match.get("real_odds")
 
-        # Mundial 2026: el modelo ya estima la fuerza de selecciones via Elo (engine.py),
-        # asi que generamos value bets normalmente.
-        skip_alerts = False
+        # Mundial 2026: las probabilidades por Elo son sensatas, pero un modelo Elo no le
+        # gana al mercado afiladisimo del Mundial -> sus "value bets" son ruido. Modo
+        # informativo: NO generamos alertas del Mundial (la ventaja real esta en clubes).
+        skip_alerts = match.get("league") == "Mundial 2026"
 
         if real_odds and real_odds.get("odd_home"):
             best_by_market = real_odds.get("best_by_market", {})

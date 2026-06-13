@@ -28,6 +28,53 @@ MODELS_DIR.mkdir(exist_ok=True)
 
 from data.fetcher import TEAMS_DB
 
+# ───────────────────────────────────────────────────────────────
+# Elo de selecciones nacionales (Mundial 2026)
+# ───────────────────────────────────────────────────────────────
+# El modelo Poisson/LogReg esta entrenado con ligas de CLUBES, no selecciones.
+# Para el Mundial usamos el Elo de cada seleccion (World Football Elo, eloratings.net)
+# para derivar los lambdas. Top-20 anclado a datos enero 2026; el resto, estimaciones
+# por nivel conocido. Cualquier seleccion no listada cae a un Elo neutro-bajo (1550).
+WORLD_CUP_ELO = {
+    # Top tier (Elo confirmado ene-2026)
+    "Spain": 2171, "Argentina": 2113, "France": 2063, "England": 2042,
+    "Colombia": 1998, "Brazil": 1979, "Portugal": 1976, "Netherlands": 1959,
+    "Croatia": 1933, "Ecuador": 1933, "Norway": 1922, "Germany": 1910,
+    "Switzerland": 1897, "Uruguay": 1890, "Japan": 1879, "Senegal": 1869,
+    "Denmark": 1864, "Belgium": 1849,
+    # Tier medio-alto (estimaciones)
+    "Morocco": 1845, "Serbia": 1800, "South Korea": 1800, "Korea Republic": 1800,
+    "Austria": 1795, "Mexico": 1790, "Poland": 1775, "Iran": 1760, "USA": 1760,
+    "United States": 1760, "Scotland": 1755, "Algeria": 1750, "Paraguay": 1745,
+    "Nigeria": 1740, "Ivory Coast": 1730, "Canada": 1730, "Australia": 1725,
+    "Peru": 1720, "Egypt": 1715, "Cameroon": 1705, "Venezuela": 1700,
+    # Tier medio (estimaciones)
+    "Ghana": 1695, "Tunisia": 1690, "Panama": 1670, "Qatar": 1660, "Mali": 1660,
+    "Costa Rica": 1655, "South Africa": 1655, "Saudi Arabia": 1640,
+    "Cape Verde": 1635, "Uzbekistan": 1620, "DR Congo": 1620, "Honduras": 1565,
+    "Iraq": 1560, "Jamaica": 1585, "Jordan": 1550,
+    # Tier bajo (estimaciones)
+    "Curacao": 1505, "Curaçao": 1505, "New Zealand": 1500, "Haiti": 1500,
+    "Bolivia": 1500,
+}
+WC_GOALS_TOTAL = 2.60    # goles totales esperados por partido (controla Over/Under, estable)
+WC_ELO_KS      = 0.0050  # supremacia (lambda_h - lambda_a) por cada punto de diferencia de Elo
+WC_SUP_MAX     = 2.40    # tope de supremacia (evita lambdas extremos)
+WC_LAMBDA_MIN  = 0.18    # piso de lambda
+WC_ELO_DEFAULT = 1550    # Elo para selecciones no listadas
+
+
+def wc_elo_lookup(team: str) -> int:
+    """Devuelve el Elo de una seleccion (match exacto, luego case-insensitive, luego default)."""
+    key = (team or "").strip()
+    if key in WORLD_CUP_ELO:
+        return WORLD_CUP_ELO[key]
+    low = key.lower()
+    for k, v in WORLD_CUP_ELO.items():
+        if k.lower() == low:
+            return v
+    return WC_ELO_DEFAULT
+
 
 def dixon_coles_tau(x: int, y: int, lambda_h: float, lambda_a: float, rho: float) -> float:
     """
@@ -325,13 +372,31 @@ class PoissonModel:
             "n_matches":      total,
         }
 
+    def _elo_expected_goals(self, home: str, away: str) -> tuple[float, float]:
+        """
+        Lambdas para selecciones nacionales (Mundial) a partir del Elo de AMBOS equipos.
+        Sin ventaja de local (sede neutral): solo cuenta la diferencia de fuerza.
+        Modelo aditivo: total de goles fijo (Over/Under estable) y supremacia desde el Elo
+        (controla quien gana). Asi una diferencia de Elo grande NO infla los goles totales.
+        """
+        elo_h = wc_elo_lookup(home)
+        elo_a = wc_elo_lookup(away)
+        s = (elo_h - elo_a) * WC_ELO_KS
+        s = float(np.clip(s, -WC_SUP_MAX, WC_SUP_MAX))
+        lambda_h = max(WC_LAMBDA_MIN, WC_GOALS_TOTAL / 2 + s / 2)
+        lambda_a = max(WC_LAMBDA_MIN, WC_GOALS_TOTAL / 2 - s / 2)
+        return round(lambda_h, 3), round(lambda_a, 3)
+
     def predict_proba(self, home: str, away: str, league: str,
                        max_goals: int = 8,
                        use_form: bool = True,
                        use_h2h: bool = True,
                        form_weight: float = 0.25,
                        h2h_weight: float = 0.15) -> dict:
-        if home not in self.attack_params:
+        if league == "Mundial 2026":
+            # Seleccion nacional: lambdas desde el Elo de ambos equipos (sede neutral, sin ventaja de local)
+            lambda_h, lambda_a = self._elo_expected_goals(home, away)
+        elif home not in self.attack_params:
             td  = TEAMS_DB.get(home, {"att": 1.2, "def": 1.1, "elo": 1650})
             avg = self.league_avg.get(league, 1.35)
             lambda_h = td["att"] * 0.95 * avg * math.exp(self.home_advantage)

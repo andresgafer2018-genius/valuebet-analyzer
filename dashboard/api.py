@@ -237,9 +237,9 @@ def _train_and_analyze():
         match_enriched = {**match, "form_home": form_home, "form_away": form_away, "h2h": h2h}
         real_odds = match.get("real_odds")
 
-        # Mundial 2026: el modelo todavia no conoce la fuerza de selecciones.
-        # Mostramos los partidos pero NO generamos value bets (evita edges falsos).
-        skip_alerts = match.get("league") == "Mundial 2026"
+        # Mundial 2026: el modelo ya estima la fuerza de selecciones via Elo (engine.py),
+        # asi que generamos value bets normalmente.
+        skip_alerts = False
 
         if real_odds and real_odds.get("odd_home"):
             best_by_market = real_odds.get("best_by_market", {})
@@ -267,16 +267,29 @@ def _train_and_analyze():
                     "bookmaker_url":  bk_info["bk_url"],
                 }
                 for a in det.detect(pred, market_odds, match_enriched, closing_odds):
-                    if a.get("market") == market_id and not skip_alerts:
-                        all_alerts.append(a)
+                    if a.get("market") != market_id or skip_alerts:
+                        continue
+                    # Guardrail Mundial: no flaggear moneyline de underdog largo (1X2 con cuota > 4.5).
+                    # Ahi un modelo Elo generico no le gana a un mercado afilado -> apuesta poco confiable.
+                    if (match.get("league") == "Mundial 2026"
+                            and market_id in ("1X2_H", "1X2_D", "1X2_A")
+                            and a.get("odd", 0) > 4.5):
+                        continue
+                    all_alerts.append(a)
             arb = arb_det.detect_arb([closing_base])
         else:
             sim = fetcher.get_simulated_odds(match)
             odds_list = [{**sim, "bookmaker_name": "Simulado", "bookmaker_url": ""}]
             closing_odds = fetcher.get_closing_odds(match, odds_list[0], pred)
             for odds in odds_list:
-                if not skip_alerts:
-                    all_alerts.extend(det.detect(pred, odds, match_enriched, closing_odds))
+                if skip_alerts:
+                    continue
+                for a in det.detect(pred, odds, match_enriched, closing_odds):
+                    if (match.get("league") == "Mundial 2026"
+                            and a.get("market") in ("1X2_H", "1X2_D", "1X2_A")
+                            and a.get("odd", 0) > 4.5):
+                        continue
+                    all_alerts.append(a)
             arb = arb_det.detect_arb(odds_list)
 
         if arb:

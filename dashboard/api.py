@@ -77,6 +77,7 @@ def _get_matches_with_real_odds() -> list:
         "soccer_spain_la_liga",
         "soccer_italy_serie_a",
         "soccer_germany_bundesliga",
+        "soccer_fifa_world_cup",
     ]
     sport_key_to_league = {
         "soccer_conmebol_copa_libertadores": "Copa Libertadores",
@@ -92,6 +93,7 @@ def _get_matches_with_real_odds() -> list:
         "soccer_spain_la_liga":              "La Liga",
         "soccer_italy_serie_a":              "Serie A",
         "soccer_germany_bundesliga":         "Bundesliga",
+        "soccer_fifa_world_cup":             "Mundial 2026",
     }
     bookmaker_urls = {
         "bet365": "https://www.bet365.com", "betway": "https://betway.com.ar",

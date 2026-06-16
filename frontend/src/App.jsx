@@ -706,6 +706,13 @@ export default function App() {
     setSelected(n)
   }
 
+  // Auto-reset: si la liga seleccionada desaparece de leagueList, volver a "Todas las ligas"
+  React.useEffect(() => {
+    if (selLeague !== "all" && !leagueList.includes(selLeague)) {
+      setSelLeague("all")
+    }
+  }, [leagueList, selLeague])
+
   const clearFilters = () => { setSelLeague("all"); setSelConf("all"); setMinEdge(0) }
 
   const filtered = alerts.filter(a =>

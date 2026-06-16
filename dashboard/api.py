@@ -240,7 +240,7 @@ def _train_and_analyze():
         # Mundial 2026: las probabilidades por Elo son sensatas, pero un modelo Elo no le
         # gana al mercado afiladisimo del Mundial -> sus "value bets" son ruido. Modo
         # informativo: NO generamos alertas del Mundial (la ventaja real esta en clubes).
-        skip_alerts = match.get("league") == "Mundial 2026"
+        skip_alerts = match.get("league") in ("Mundial 2026", "World Cup")
 
         if real_odds and real_odds.get("odd_home"):
             best_by_market = real_odds.get("best_by_market", {})
@@ -272,7 +272,7 @@ def _train_and_analyze():
                         continue
                     # Guardrail Mundial: no flaggear moneyline de underdog largo (1X2 con cuota > 4.5).
                     # Ahi un modelo Elo generico no le gana a un mercado afilado -> apuesta poco confiable.
-                    if (match.get("league") == "Mundial 2026"
+                    if (match.get("league") in ("Mundial 2026", "World Cup")
                             and market_id in ("1X2_H", "1X2_D", "1X2_A")
                             and a.get("odd", 0) > 4.5):
                         continue
@@ -286,7 +286,7 @@ def _train_and_analyze():
                 if skip_alerts:
                     continue
                 for a in det.detect(pred, odds, match_enriched, closing_odds):
-                    if (match.get("league") == "Mundial 2026"
+                    if (match.get("league") in ("Mundial 2026", "World Cup")
                             and a.get("market") in ("1X2_H", "1X2_D", "1X2_A")
                             and a.get("odd", 0) > 4.5):
                         continue

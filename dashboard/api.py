@@ -180,11 +180,14 @@ def _get_matches_with_real_odds() -> list:
     return matches
 
 
+LR_WEIGHT = 0.0   # peso de la Regresion Logistica en la mezcla (0 = desactivada)
+
+
 def _train_and_analyze():
     global pm, lm, cal, fetcher
     log.info("Entrenando modelos...")
     fetcher = DataFetcher()
-    df      = fetcher.get_historical_matches(400)
+    df      = fetcher.get_historical_matches()
     pm = PoissonModel(); pm.fit(df)
     lm = LogisticModel(); lm.fit(df)
 
@@ -228,10 +231,14 @@ def _train_and_analyze():
             h2h_home_wr=h2h.get("home_win_rate", 0.33),
             h2h_away_wr=h2h.get("away_win_rate", 0.33),
         )
-        if pred_lr:
-            ph = pred["p_home"]*0.6 + pred_lr["lr_p_home"]*0.4
-            pd = pred["p_draw"]*0.6 + pred_lr["lr_p_draw"]*0.4
-            pa = pred["p_away"]*0.6 + pred_lr["lr_p_away"]*0.4
+        # La LogReg arma sus features con TEAMS_DB (vacio) -> predice siempre la tasa
+        # base (~44/26/30) para cualquier partido. Desactivada (peso 0) hasta
+        # reconstruirla con features reales. Ver LR_WEIGHT.
+        if pred_lr and LR_WEIGHT > 0:
+            w  = LR_WEIGHT
+            ph = pred["p_home"]*(1-w) + pred_lr["lr_p_home"]*w
+            pd = pred["p_draw"]*(1-w) + pred_lr["lr_p_draw"]*w
+            pa = pred["p_away"]*(1-w) + pred_lr["lr_p_away"]*w
             t  = ph+pd+pa
             pred.update({"p_home": round(ph/t,4), "p_draw": round(pd/t,4), "p_away": round(pa/t,4)})
         pred = cal.calibrate(pred)

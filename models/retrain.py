@@ -79,7 +79,7 @@ def run_retrain(poisson_model, logistic_model, calibrator, fetcher) -> dict:
         start_time = datetime.now(timezone.utc)
 
         # Mismo método que el arranque normal
-        df = fetcher.get_historical_matches(600)
+        df = fetcher.get_historical_matches()
 
         if df is None or len(df) < 100:
             raise ValueError(f"Datos insuficientes ({len(df) if df is not None else 0} partidos)")

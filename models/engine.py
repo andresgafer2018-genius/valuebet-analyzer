@@ -27,6 +27,7 @@ MODELS_DIR = Path(__file__).parent.parent / "models"
 MODELS_DIR.mkdir(exist_ok=True)
 
 from data.fetcher import TEAMS_DB
+from data.team_names import canon_team
 
 # ───────────────────────────────────────────────────────────────
 # Elo de selecciones nacionales (Mundial 2026)
@@ -63,8 +64,8 @@ WC_SUP_MAX     = 2.40    # tope de supremacia (evita lambdas extremos)
 WC_LAMBDA_MIN  = 0.18    # piso de lambda
 
 # Cobertura minima: partidos de entrenamiento que necesita CADA equipo para que
-# el modelo emita alertas. Por debajo, los lambdas son genericos -> edge = ruido.
-MIN_TEAM_MATCHES = 8
+# el modelo emita alertas. Por debajo, los parametros son poco fiables -> edge = ruido.
+MIN_TEAM_MATCHES = 20
 WC_ELO_DEFAULT = 1550    # Elo para selecciones no listadas
 
 
@@ -121,6 +122,7 @@ class PoissonModel:
         self.rho            = -0.13
         self.is_fitted      = False
         self.team_n         = {}   # partidos de entrenamiento por equipo
+        self.team_league    = {}   # liga de entrenamiento mas reciente de cada equipo
         # Historial completo para forma reciente y H2H
         self._df_history: pd.DataFrame | None = None
 
@@ -142,25 +144,24 @@ class PoissonModel:
         if not self.is_fitted or len(df) < 50:
             return -0.13
 
+        low = df[(df["home_goals"] <= 1) & (df["away_goals"] <= 1)]
+        if len(low) == 0:
+            return -0.13
+        lams = np.array([self._expected_goals(r["home_team"], r["away_team"], r["league"])
+                         for _, r in low.iterrows()])
+        lh, la = lams[:, 0], lams[:, 1]
+        x = low["home_goals"].to_numpy()
+        y = low["away_goals"].to_numpy()
+        base = np.log(poisson.pmf(x, lh)) + np.log(poisson.pmf(y, la))
+
         def neg_log_likelihood(rho_val):
-            rho_val = rho_val[0]
-            ll = 0.0
-            for _, row in df.iterrows():
-                h_goals = int(row["home_goals"])
-                a_goals = int(row["away_goals"])
-                if h_goals > 1 or a_goals > 1:
-                    continue
-                try:
-                    lh, la = self._expected_goals(row["home_team"], row["away_team"], row["league"])
-                    tau = dixon_coles_tau(h_goals, a_goals, lh, la, rho_val)
-                    if tau <= 0:
-                        return 1e10
-                    p = poisson.pmf(h_goals, lh) * poisson.pmf(a_goals, la) * tau
-                    if p > 0:
-                        ll += math.log(p)
-                except Exception:
-                    continue
-            return -ll
+            r = rho_val[0]
+            tau = np.where((x == 0) & (y == 0), 1 - lh * la * r,
+                  np.where((x == 0) & (y == 1), 1 + lh * r,
+                  np.where((x == 1) & (y == 0), 1 + la * r, 1 - r)))
+            if np.any(tau <= 0):
+                return 1e10
+            return -float(np.sum(base + np.log(tau)))
 
         result = minimize(neg_log_likelihood, x0=[-0.13],
                          bounds=[(-0.4, 0.0)], method="L-BFGS-B")
@@ -179,71 +180,73 @@ class PoissonModel:
             str(k): int(v) for k, v in
             pd.concat([df["home_team"], df["away_team"]]).value_counts().items()
         }
-        att  = {t: 1.0 for t in teams}
-        deff = {t: 1.0 for t in teams}
+        # Liga mas reciente de cada equipo (df viene ordenado por fecha)
+        self.team_league = {}
+        for _, r in df[["home_team", "away_team", "league"]].iterrows():
+            self.team_league[r["home_team"]] = r["league"]
+            self.team_league[r["away_team"]] = r["league"]
 
         home_avg = df["home_goals"].mean()
         away_avg = df["away_goals"].mean()
         self.home_advantage = math.log(home_avg / away_avg) / 2 if away_avg > 0 else 0.1
 
-        for iteration in range(20):
-            new_att  = {}
-            new_deff = {}
-            for team in teams:
-                home_rows = df[df["home_team"] == team]
-                away_rows = df[df["away_team"] == team]
+        # ── Ajuste iterativo vectorizado (misma formula que antes, mucho mas rapido) ──
+        idx = {t: i for i, t in enumerate(teams)}
+        hi  = df["home_team"].map(idx).to_numpy()
+        ai  = df["away_team"].map(idx).to_numpy()
+        hg  = df["home_goals"].to_numpy(dtype=float)
+        ag  = df["away_goals"].to_numpy(dtype=float)
+        lav = df["league"].map(lambda l: self.league_avg.get(l, 1.35)).to_numpy(dtype=float)
+        eh  = math.exp(self.home_advantage)
+        nt  = len(teams)
+        scored   = np.bincount(hi, hg, nt) + np.bincount(ai, ag, nt)
+        conceded = np.bincount(hi, ag, nt) + np.bincount(ai, hg, nt)
+        att  = np.ones(nt)
+        deff = np.ones(nt)
 
-                scored_home = home_rows["home_goals"].sum()
-                scored_away = away_rows["away_goals"].sum()
+        for iteration in range(50):
+            # goles esperados a favor (sin el att propio) y en contra (sin la def propia)
+            exp_for = (np.bincount(hi, deff[ai] * lav * eh, nt) +
+                       np.bincount(ai, deff[hi] * lav, nt))
+            exp_ag  = (np.bincount(hi, att[ai] * lav, nt) +
+                       np.bincount(ai, att[hi] * lav * eh, nt))
+            new_att  = scored   / (exp_for + 1e-6)
+            new_deff = conceded / (exp_ag  + 1e-6)
+            new_att  /= new_att.mean()
+            new_deff /= new_deff.mean()
+            delta = max(np.abs(new_att - att).max(), np.abs(new_deff - deff).max())
+            att, deff = new_att, new_deff
+            if iteration > 5 and delta < 1e-5:
+                break
 
-                exp_scored_home = sum(
-                    att[team] * deff.get(r["away_team"], 1.0) *
-                    self.league_avg.get(r["league"], 1.35) * math.exp(self.home_advantage)
-                    for _, r in home_rows.iterrows()
-                )
-                exp_scored_away = sum(
-                    att[team] * deff.get(r["home_team"], 1.0) *
-                    self.league_avg.get(r["league"], 1.35)
-                    for _, r in away_rows.iterrows()
-                )
-                total_scored     = scored_home + scored_away
-                total_exp_scored = exp_scored_home + exp_scored_away + 1e-6
-                new_att[team]    = att[team] * (total_scored / total_exp_scored)
-
-                conceded_home = home_rows["away_goals"].sum()
-                conceded_away = away_rows["home_goals"].sum()
-                exp_conceded_home = sum(
-                    att.get(r["away_team"], 1.0) * deff[team] *
-                    self.league_avg.get(r["league"], 1.35)
-                    for _, r in home_rows.iterrows()
-                )
-                exp_conceded_away = sum(
-                    att.get(r["home_team"], 1.0) * deff[team] *
-                    self.league_avg.get(r["league"], 1.35) * math.exp(self.home_advantage)
-                    for _, r in away_rows.iterrows()
-                )
-                total_conceded     = conceded_home + conceded_away
-                total_exp_conceded = exp_conceded_home + exp_conceded_away + 1e-6
-                new_deff[team]     = deff[team] * (total_conceded / total_exp_conceded)
-
-            att_mean  = np.mean(list(new_att.values()))
-            deff_mean = np.mean(list(new_deff.values()))
-            att  = {t: v / att_mean  for t, v in new_att.items()}
-            deff = {t: v / deff_mean for t, v in new_deff.items()}
-
-            if iteration > 5:
-                delta = max(abs(att[t] - new_att.get(t, att[t])) for t in teams)
-                if delta < 1e-4:
-                    break
+        att  = {t: float(att[i])  for t, i in idx.items()}
+        deff = {t: float(deff[i]) for t, i in idx.items()}
 
         self.attack_params  = att
         self.defense_params = deff
         self.is_fitted      = True
         # Guardar historial para forma reciente y H2H
         self._df_history    = df.copy()
+        self._build_history_index()
         print(f"[Poisson] OK en {iteration+1} iteraciones. Home advantage: {self.home_advantage:.3f}")
 
         self.rho = self._estimate_rho(df)
+
+    def _build_history_index(self):
+        """Indices por equipo y por cruce sobre el historial, para que forma y H2H
+        no filtren el DataFrame completo en cada prediccion."""
+        df = self._df_history.reset_index(drop=True)
+        self._df_history = df
+        self._hg = df["home_goals"].to_numpy()
+        self._ag = df["away_goals"].to_numpy()
+        self._idx_home = {k: v for k, v in df.groupby("home_team").indices.items()}
+        self._idx_away = {k: v for k, v in df.groupby("away_team").indices.items()}
+        self._idx_pair = {k: v for k, v in df.groupby(["home_team", "away_team"]).indices.items()}
+        self._global_scored_avg = (df["home_goals"].mean() + df["away_goals"].mean()) / 2 or 1.3
+
+    def _ensure_index(self):
+        if not hasattr(self, "_idx_home") and self._df_history is not None:
+            self._build_history_index()
 
     def get_recent_form(self, team: str, n: int = 5) -> dict:
         """
@@ -259,26 +262,12 @@ class PoissonModel:
         if self._df_history is None or len(self._df_history) == 0:
             return {"form_factor_att": 1.0, "form_factor_def": 1.0, "n_matches": 0}
 
-        df = self._df_history
-        # Partidos como local
-        home_rows = df[df["home_team"] == team].tail(n)
-        # Partidos como visitante
-        away_rows = df[df["away_team"] == team].tail(n)
-
-        # Combinar y tomar los últimos N
-        scored, conceded, wins = [], [], 0
-
-        for _, r in home_rows.iterrows():
-            scored.append(r["home_goals"])
-            conceded.append(r["away_goals"])
-            if r["home_goals"] > r["away_goals"]:
-                wins += 1
-
-        for _, r in away_rows.iterrows():
-            scored.append(r["away_goals"])
-            conceded.append(r["home_goals"])
-            if r["away_goals"] > r["home_goals"]:
-                wins += 1
+        self._ensure_index()
+        hi = self._idx_home.get(team, np.array([], dtype=int))[-n:]   # ultimos n como local
+        ai = self._idx_away.get(team, np.array([], dtype=int))[-n:]   # ultimos n como visitante
+        scored   = list(self._hg[hi]) + list(self._ag[ai])
+        conceded = list(self._ag[hi]) + list(self._hg[ai])
+        wins = int((self._hg[hi] > self._ag[hi]).sum() + (self._ag[ai] > self._hg[ai]).sum())
 
         total = len(scored)
         if total == 0:
@@ -289,9 +278,7 @@ class PoissonModel:
         win_rate     = wins / total
 
         # Forma relativa a la media global del historial
-        global_scored_avg = (
-            df["home_goals"].mean() + df["away_goals"].mean()
-        ) / 2 or 1.3
+        global_scored_avg = self._global_scored_avg
 
         # Factor de ataque: cuánto mejor/peor convierte respecto a la media
         form_factor_att = np.clip(scored_avg / global_scored_avg, 0.7, 1.4)
@@ -324,35 +311,16 @@ class PoissonModel:
         if self._df_history is None or len(self._df_history) == 0:
             return {"h2h_bias_home": 1.0, "h2h_bias_away": 1.0, "n_matches": 0}
 
-        df = self._df_history
-
-        # Buscar enfrentamientos directos en ambas direcciones
-        h2h_direct  = df[(df["home_team"] == home) & (df["away_team"] == away)].tail(n)
-        h2h_reverse = df[(df["home_team"] == away) & (df["away_team"] == home)].tail(n)
-
-        home_wins, away_wins, draws = 0, 0, 0
-        goals_home, goals_away = [], []
-
-        for _, r in h2h_direct.iterrows():
-            goals_home.append(r["home_goals"])
-            goals_away.append(r["away_goals"])
-            if r["home_goals"] > r["away_goals"]:
-                home_wins += 1
-            elif r["home_goals"] == r["away_goals"]:
-                draws += 1
-            else:
-                away_wins += 1
-
-        for _, r in h2h_reverse.iterrows():
-            # En encuentros inversos, "home" jugó de visitante
-            goals_home.append(r["away_goals"])
-            goals_away.append(r["home_goals"])
-            if r["away_goals"] > r["home_goals"]:
-                home_wins += 1
-            elif r["away_goals"] == r["home_goals"]:
-                draws += 1
-            else:
-                away_wins += 1
+        self._ensure_index()
+        empty = np.array([], dtype=int)
+        di = self._idx_pair.get((home, away), empty)[-n:]   # directos
+        ri = self._idx_pair.get((away, home), empty)[-n:]   # inversos ("home" fue visitante)
+        goals_home = list(self._hg[di]) + list(self._ag[ri])
+        goals_away = list(self._ag[di]) + list(self._hg[ri])
+        gh, ga = np.array(goals_home), np.array(goals_away)
+        home_wins = int((gh > ga).sum())
+        away_wins = int((gh < ga).sum())
+        draws     = int((gh == ga).sum())
 
         total = len(goals_home)
         if total == 0:
@@ -402,13 +370,22 @@ class PoissonModel:
                        use_h2h: bool = True,
                        form_weight: float = 0.25,
                        h2h_weight: float = 0.15) -> dict:
+        # Nombres de The Odds API -> nombres de football-data (los del entrenamiento)
+        home, away = canon_team(home), canon_team(away)
+        # Si ambos equipos entrenaron en la misma liga, usamos esa liga para el promedio
+        # de goles (cubre copas como Libertadores/Champions entre equipos de la misma liga)
+        lg_h = getattr(self, "team_league", {}).get(home)
+        lg_a = getattr(self, "team_league", {}).get(away)
+        same_league = lg_h is not None and lg_h == lg_a
+        model_league = lg_h if same_league else league
+
         if league == "Mundial 2026":
             # Seleccion nacional: lambdas desde el Elo de ambos equipos (sede neutral, sin ventaja de local)
             lambda_h, lambda_a = self._elo_expected_goals(home, away)
         else:
             # Equipo no entrenado -> parametros neutros (1.0) solo para ese equipo;
             # el rival conserva sus parametros reales. model_coverage marca el caso.
-            lambda_h, lambda_a = self._expected_goals(home, away, league)
+            lambda_h, lambda_a = self._expected_goals(home, away, model_league)
 
         # ── Forma reciente ──────────────────────────────────────────────────
         form_home = {"form_factor_att": 1.0, "form_factor_def": 1.0, "n_matches": 0}
@@ -454,11 +431,11 @@ class PoissonModel:
             pass  # Si falla el clima, continua sin ajuste
 
         # ── Score matrix (Dixon-Coles) ──────────────────────────────────────
-        score_matrix = np.zeros((max_goals + 1, max_goals + 1))
-        for i in range(max_goals + 1):
-            for j in range(max_goals + 1):
-                tau = dixon_coles_tau(i, j, lambda_h, lambda_a, self.rho)
-                score_matrix[i, j] = poisson.pmf(i, lambda_h) * poisson.pmf(j, lambda_a) * tau
+        goals = np.arange(max_goals + 1)
+        score_matrix = np.outer(poisson.pmf(goals, lambda_h), poisson.pmf(goals, lambda_a))
+        for i in (0, 1):
+            for j in (0, 1):
+                score_matrix[i, j] *= dixon_coles_tau(i, j, lambda_h, lambda_a, self.rho)
 
         total = score_matrix.sum()
         if total > 0:
@@ -468,11 +445,7 @@ class PoissonModel:
         p_draw = float(np.sum(np.diag(score_matrix)))
         p_away = float(np.sum(np.triu(score_matrix, 1)))
 
-        p_over25 = 0.0
-        for i in range(max_goals + 1):
-            for j in range(max_goals + 1):
-                if i + j > 2:
-                    p_over25 += score_matrix[i, j]
+        p_over25 = float(score_matrix[np.add.outer(goals, goals) > 2].sum())
         p_under25 = 1.0 - p_over25
 
         team_n = getattr(self, "team_n", {}) or {}
@@ -482,7 +455,10 @@ class PoissonModel:
             "home_n":       n_h,
             "away_n":       n_a,
             "min_required": MIN_TEAM_MATCHES,
-            "ok":           n_h >= MIN_TEAM_MATCHES and n_a >= MIN_TEAM_MATCHES,
+            "same_league":  same_league,
+            "model_league": model_league if same_league else None,
+            "ok":           (n_h >= MIN_TEAM_MATCHES and n_a >= MIN_TEAM_MATCHES
+                             and same_league),
         }
 
         total_1x2 = p_home + p_draw + p_away
@@ -682,6 +658,9 @@ class ValueBetDetector:
 
     MIN_EDGE = 0.03
     MIN_ODD  = 1.50
+    # Tope de cordura: un edge > 15% contra el mercado casi siempre es un error del
+    # modelo (dato faltante, lesion, rotacion), no una oportunidad real.
+    MAX_EDGE = 0.15
 
     def detect(self, prediction: dict, odds: dict, match: dict,
                closing_odds: dict = None) -> list[dict]:
@@ -700,7 +679,7 @@ class ValueBetDetector:
             p_implied = 1 / odd
             edge      = p_model - p_implied
 
-            if edge >= self.MIN_EDGE:
+            if self.MIN_EDGE <= edge <= self.MAX_EDGE:
                 kelly      = self._kelly(p_model, odd)
                 ev         = round(p_model * (odd - 1) - (1 - p_model), 4)
                 confidence = self._confidence_score(edge, p_model)

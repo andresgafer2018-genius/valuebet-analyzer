@@ -121,30 +121,85 @@ def get_team_stats(team_id, league_id, season=2024):
     return r.json().get("response", {})
 
 class DataFetcher:
-    def get_historical_matches(self, n=400):
-        urls = [
-            "https://www.football-data.co.uk/mmz4281/2324/E0.csv",
-            "https://www.football-data.co.uk/mmz4281/2324/SP1.csv",
-            "https://www.football-data.co.uk/mmz4281/2324/I1.csv",
-            "https://www.football-data.co.uk/mmz4281/2324/D1.csv",
-        ]
+    # Ligas de entrenamiento: codigo football-data -> nombre de liga que usa la app
+    # (el mismo que sport_key_to_league en api.py, asi league_avg coincide).
+    HIST_MAIN_LEAGUES = {
+        "E0":  "Premier League",
+        "SP1": "La Liga",
+        "I1":  "Serie A",
+        "D1":  "Bundesliga",
+        "F1":  "Ligue 1",
+        "B1":  "Belgium First Div",
+    }
+    HIST_EXTRA_LEAGUES = {      # football-data "extra": un CSV con todas las temporadas
+        "ARG": "Liga Argentina",
+        "BRA": "Brazil Serie A",
+    }
+
+    @staticmethod
+    def _current_seasons() -> list[str]:
+        """Codigos de temporada europea actual y anterior, p.ej. ['2627', '2526']."""
+        from datetime import datetime
+        now = datetime.utcnow()
+        start = now.year if now.month >= 7 else now.year - 1
+        return [f"{(start - k) % 100:02d}{(start - k + 1) % 100:02d}" for k in (0, 1)]
+
+    def get_historical_matches(self, n=None):
+        """
+        Partidos para entrenar: temporada actual + anterior completas de 6 ligas
+        europeas, y las 2 ultimas temporadas de Argentina y Brasil.
+        Ordenado por fecha (lo mas reciente al final, para forma y H2H).
+        `n` es opcional: si se pasa, devuelve solo los ultimos n partidos.
+        """
+        cols = ["home_team", "away_team", "home_goals", "away_goals", "result", "league", "date"]
         dfs = []
-        for url in urls:
+
+        for code, league in self.HIST_MAIN_LEAGUES.items():
+            for season in self._current_seasons():
+                url = f"https://www.football-data.co.uk/mmz4281/{season}/{code}.csv"
+                try:
+                    r = requests.get(url, timeout=15)
+                    if r.status_code != 200:
+                        continue
+                    df = pd.read_csv(io.StringIO(r.content.decode("utf-8", errors="ignore")))
+                    df = df.dropna(subset=["HomeTeam", "AwayTeam", "FTHG", "FTAG"])
+                    df = df.rename(columns={
+                        "HomeTeam": "home_team", "AwayTeam": "away_team",
+                        "FTHG": "home_goals", "FTAG": "away_goals", "FTR": "result",
+                    })
+                    df["league"] = league
+                    df["date"] = pd.to_datetime(df["Date"], dayfirst=True, errors="coerce")
+                    dfs.append(df[cols])
+                except Exception as e:
+                    import logging; logging.getLogger(__name__).warning(f"[Hist] {code} {season}: {e}")
+
+        for code, league in self.HIST_EXTRA_LEAGUES.items():
+            url = f"https://www.football-data.co.uk/new/{code}.csv"
             try:
-                r = requests.get(url, timeout=10)
+                r = requests.get(url, timeout=15)
+                if r.status_code != 200:
+                    continue
                 df = pd.read_csv(io.StringIO(r.content.decode("utf-8", errors="ignore")))
-                df = df.dropna(subset=["HomeTeam", "AwayTeam", "FTHG", "FTAG"])
-                df["league"] = url.split("/")[-1].replace(".csv", "")
-                dfs.append(df)
-            except:
-                pass
+                df = df.dropna(subset=["Home", "Away", "HG", "AG"])
+                seasons = sorted(df["Season"].astype(str).unique())[-2:]
+                df = df[df["Season"].astype(str).isin(seasons)]
+                df = df.rename(columns={
+                    "Home": "home_team", "Away": "away_team",
+                    "HG": "home_goals", "AG": "away_goals", "Res": "result",
+                })
+                df["league"] = league
+                df["date"] = pd.to_datetime(df["Date"], dayfirst=True, errors="coerce")
+                dfs.append(df[cols])
+            except Exception as e:
+                import logging; logging.getLogger(__name__).warning(f"[Hist] {code}: {e}")
+
         if not dfs:
             return pd.DataFrame()
         c = pd.concat(dfs, ignore_index=True)
-        return c.rename(columns={
-            "HomeTeam": "home_team", "AwayTeam": "away_team",
-            "FTHG": "home_goals", "FTAG": "away_goals", "FTR": "result"
-        }).tail(n)
+        c["home_goals"] = c["home_goals"].astype(int)
+        c["away_goals"] = c["away_goals"].astype(int)
+        c = c.sort_values("date", kind="stable").reset_index(drop=True)
+        return c.tail(n).reset_index(drop=True) if n else c
 
     def get_upcoming_matches(self):
         """

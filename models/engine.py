@@ -61,6 +61,10 @@ WC_GOALS_TOTAL = 2.60    # goles totales esperados por partido (controla Over/Un
 WC_ELO_KS      = 0.0050  # supremacia (lambda_h - lambda_a) por cada punto de diferencia de Elo
 WC_SUP_MAX     = 2.40    # tope de supremacia (evita lambdas extremos)
 WC_LAMBDA_MIN  = 0.18    # piso de lambda
+
+# Cobertura minima: partidos de entrenamiento que necesita CADA equipo para que
+# el modelo emita alertas. Por debajo, los lambdas son genericos -> edge = ruido.
+MIN_TEAM_MATCHES = 8
 WC_ELO_DEFAULT = 1550    # Elo para selecciones no listadas
 
 
@@ -116,6 +120,7 @@ class PoissonModel:
         self.league_avg     = {}
         self.rho            = -0.13
         self.is_fitted      = False
+        self.team_n         = {}   # partidos de entrenamiento por equipo
         # Historial completo para forma reciente y H2H
         self._df_history: pd.DataFrame | None = None
 
@@ -170,6 +175,10 @@ class PoissonModel:
             self.league_avg[league] = (grp["home_goals"].mean() + grp["away_goals"].mean()) / 2
 
         teams = sorted(set(df["home_team"]) | set(df["away_team"]))
+        self.team_n = {
+            str(k): int(v) for k, v in
+            pd.concat([df["home_team"], df["away_team"]]).value_counts().items()
+        }
         att  = {t: 1.0 for t in teams}
         deff = {t: 1.0 for t in teams}
 
@@ -396,17 +405,9 @@ class PoissonModel:
         if league == "Mundial 2026":
             # Seleccion nacional: lambdas desde el Elo de ambos equipos (sede neutral, sin ventaja de local)
             lambda_h, lambda_a = self._elo_expected_goals(home, away)
-        elif home not in self.attack_params:
-            td  = TEAMS_DB.get(home, {"att": 1.2, "def": 1.1, "elo": 1650})
-            avg = self.league_avg.get(league, 1.35)
-            lambda_h = td["att"] * 0.95 * avg * math.exp(self.home_advantage)
-            lambda_a = 1.0 * td["def"] * avg
-        elif away not in self.attack_params:
-            td  = TEAMS_DB.get(away, {"att": 1.2, "def": 1.1, "elo": 1650})
-            avg = self.league_avg.get(league, 1.35)
-            lambda_h = 1.0 * td["def"] * avg * math.exp(self.home_advantage)
-            lambda_a = td["att"] * 0.95 * avg
         else:
+            # Equipo no entrenado -> parametros neutros (1.0) solo para ese equipo;
+            # el rival conserva sus parametros reales. model_coverage marca el caso.
             lambda_h, lambda_a = self._expected_goals(home, away, league)
 
         # ── Forma reciente ──────────────────────────────────────────────────
@@ -474,8 +475,19 @@ class PoissonModel:
                     p_over25 += score_matrix[i, j]
         p_under25 = 1.0 - p_over25
 
+        team_n = getattr(self, "team_n", {}) or {}
+        n_h = int(team_n.get(home, 0))
+        n_a = int(team_n.get(away, 0))
+        model_coverage = {
+            "home_n":       n_h,
+            "away_n":       n_a,
+            "min_required": MIN_TEAM_MATCHES,
+            "ok":           n_h >= MIN_TEAM_MATCHES and n_a >= MIN_TEAM_MATCHES,
+        }
+
         total_1x2 = p_home + p_draw + p_away
         return {
+            "model_coverage": model_coverage,
             "p_home":      round(p_home / total_1x2, 4),
             "p_draw":      round(p_draw / total_1x2, 4),
             "p_away":      round(p_away / total_1x2, 4),

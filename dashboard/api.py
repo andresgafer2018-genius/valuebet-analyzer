@@ -214,6 +214,7 @@ def _train_and_analyze():
         log.info(f"[Fallback] Usando {len(upcoming)} partidos simulados/APISPORTS")
 
     all_alerts, all_preds, arbs = [], [], []
+    n_gated = 0
     for match in upcoming:
         pred = pm.predict_proba(match["home_team"], match["away_team"], match["league"])
         form_home = pred.get("form_home", {})
@@ -241,6 +242,15 @@ def _train_and_analyze():
         # gana al mercado afiladisimo del Mundial -> sus "value bets" son ruido. Modo
         # informativo: NO generamos alertas del Mundial (la ventaja real esta en clubes).
         skip_alerts = match.get("league") in ("Mundial 2026", "World Cup")
+
+        # Gate de cobertura (Fase A): si algun equipo no tiene datos de entrenamiento
+        # suficientes, los lambdas son genericos y el "edge" es ruido. Tampoco se
+        # alerta sobre cuotas simuladas. Esos partidos quedan en modo informativo.
+        coverage_ok   = pred.get("model_coverage", {}).get("ok", False)
+        has_real_odds = bool(real_odds and real_odds.get("odd_home"))
+        if not skip_alerts and (not coverage_ok or not has_real_odds):
+            skip_alerts = True
+            n_gated += 1
 
         if real_odds and real_odds.get("odd_home"):
             best_by_market = real_odds.get("best_by_market", {})
@@ -319,6 +329,8 @@ def _train_and_analyze():
     _state["predictions"] = all_preds
     _state["arb"]         = arbs
     log.info(f"Listo: {len(_state['alerts'])} VBs, {len(arbs)} arbitrajes.")
+    log.info(f"[Gate] {n_gated}/{len(upcoming)} partidos en modo informativo "
+             f"(equipos sin cobertura del modelo o cuotas simuladas)")
 
 _train_and_analyze()
 

@@ -1,0 +1,64 @@
+# Paper trading: captura diaria de alertas (Pinnacle como precio justo) y liquidacion con CLV.
+# No apuesta nada y no toca la app. Los datos se guardan en la rama `paper-data`
+# (no en master, asi no se dispara el deploy a Fly.io).
+
+name: Paper trading
+
+on:
+  schedule:
+    - cron: "7 13 * * *"     # todos los dias 13:07 UTC = 10:07 en Argentina
+  workflow_dispatch: {}       # boton "Run workflow" para correrlo a mano
+
+permissions:
+  contents: write             # para poder pushear a la rama paper-data
+
+concurrency: paper-trading
+
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install numpy==1.24.4 pandas==2.0.3 requests==2.31.0
+
+      - name: Traer los datos de la rama paper-data
+        run: |
+          if git ls-remote --exit-code --heads origin paper-data; then
+            git fetch origin paper-data:refs/remotes/origin/paper-data
+            git worktree add -B paper-data datos origin/paper-data
+          else
+            echo "La rama paper-data no existe: se crea en esta corrida"
+            git worktree add --orphan -b paper-data datos
+          fi
+          mkdir -p datos/paper
+          cp datos/paper/*.csv paper/ 2>/dev/null || true
+
+      - name: Capturar alertas
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python paper/capture.py
+
+      - name: Liquidar y medir CLV
+        continue-on-error: true    # si football-data falla, igual se guardan las alertas
+        run: |
+          if [ -f paper/alertas.csv ]; then python paper/settle.py; fi
+
+      - name: Guardar en la rama paper-data
+        run: |
+          cp paper/*.csv datos/paper/ 2>/dev/null || true
+          cd datos
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/
+          if git diff --cached --quiet; then
+            echo "Sin cambios"
+          else
+            git commit -m "paper: corrida $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git push origin paper-data
+          fi
